@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volantino Unificato - VolantinoMix</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="unified.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXX" crossorigin="anonymous"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="nav">
+                <div class="logo">
+                    <h1>VolantinoMix</h1>
+                </div>
+                <nav class="nav-menu">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="#" class="nav-link">Categorie</a>
+                    <a href="#" class="nav-link">Preferiti</a>
+                    <a href="#" class="nav-link">Login</a>
+                </nav>
+                <div class="mobile-menu-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Page Header -->
+            <section class="page-header">
+                <div class="header-content">
+                    <h2>Il Tuo Volantino Unificato</h2>
+                    <p>Ecco il PDF generato con tutti i volantini selezionati</p>
+                </div>
+                <div class="header-actions">
+                    <button id="back-btn" class="back-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Torna alla selezione
+                    </button>
+                </div>
+            </section>
+
+            <!-- Top Ad Banner -->
+            <div class="ad-banner top-ad">
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-XXXXXXXXXX"
+                     data-ad-slot="XXXXXXXXXX"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+            </div>
+
+            <!-- PDF Viewer Section -->
+            <section class="pdf-section">
+                <div class="pdf-container">
+                    <div class="pdf-header">
+                        <div class="pdf-info">
+                            <h3 id="pdf-title">Volantino_Unificato.pdf</h3>
+                            <div class="pdf-stats">
+                                <span id="total-pages">0 pagine</span>
+                                <span class="separator">•</span>
+                                <span id="file-size">0 MB</span>
+                                <span class="separator">•</span>
+                                <span id="creation-date">Generato oggi</span>
+                            </div>
+                        </div>
+                        <div class="pdf-controls">
+                            <button id="zoom-out" class="control-btn">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                                    <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2"/>
+                                    <line x1="8" y1="11" x2="14" y2="11" stroke="currentColor" stroke-width="2"/>
+                                </svg>
+                            </button>
+                            <span id="zoom-level">100%</span>
+                            <button id="zoom-in" class="control-btn">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                                    <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2"/>
+                                    <line x1="11" y1="8" x2="11" y2="14" stroke="currentColor" stroke-width="2"/>
+                                    <line x1="8" y1="11" x2="14" y2="11" stroke="currentColor" stroke-width="2"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="pdf-viewer">
+                        <div id="pdf-loading" class="pdf-loading">
+                            <div class="spinner"></div>
+                            <p>Caricamento PDF...</p>
+                        </div>
+                        <iframe id="pdf-frame" class="pdf-frame hidden" src="" frameborder="0"></iframe>
+                        <div id="pdf-error" class="pdf-error hidden">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                                <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" stroke-width="2"/>
+                                <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            <h3>Errore nel caricamento del PDF</h3>
+                            <p>Si è verificato un problema durante il caricamento del file.</p>
+                            <button id="retry-btn" class="retry-btn">Riprova</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="pdf-sidebar">
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <button id="download-btn" class="action-btn primary">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <polyline points="7,10 12,15 17,10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Scarica PDF
+                        </button>
+                        
+                        <button id="whatsapp-btn" class="action-btn whatsapp">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Invia via WhatsApp
+                        </button>
+                        
+                        <button id="email-btn" class="action-btn email">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Invia via Email
+                        </button>
+                        
+                        <button id="share-btn" class="action-btn share">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="18" cy="5" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="6" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="18" cy="19" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Condividi
+                        </button>
+                    </div>
+
+                    <!-- Table of Contents -->
+                    <div class="toc-section">
+                        <h4>Sommario</h4>
+                        <div id="toc-list" class="toc-list">
+                            <!-- TOC items will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Ad Space removed -->
+                </div>
+            </section>
+
+            <!-- Bottom Ad Banner -->
+            <div class="ad-banner bottom-ad">
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-XXXXXXXXXX"
+                     data-ad-slot="XXXXXXXXXX"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+            </div>
+        </div>
+    </main>
+
+    <!-- Share Modal -->
+    <div id="share-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Condividi Volantino</h3>
+                <button id="close-modal" class="close-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="share-options">
+                    <button class="share-option" data-platform="facebook">
+                        <div class="share-icon facebook">f</div>
+                        <span>Facebook</span>
+                    </button>
+                    <button class="share-option" data-platform="twitter">
+                        <div class="share-icon twitter">t</div>
+                        <span>Twitter</span>
+                    </button>
+                    <button class="share-option" data-platform="linkedin">
+                        <div class="share-icon linkedin">in</div>
+                        <span>LinkedIn</span>
+                    </button>
+                    <button class="share-option" data-platform="telegram">
+                        <div class="share-icon telegram">T</div>
+                        <span>Telegram</span>
+                    </button>
+                </div>
+                <div class="share-link">
+                    <label for="share-url">Link diretto:</label>
+                    <div class="link-input-group">
+                        <input type="text" id="share-url" readonly>
+                        <button id="copy-link" class="copy-btn">Copia</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 VolantinoMix. Tutti i diritti riservati.</p>
+        </div>
+    </footer>
+
+    <script src="unified.js"></script>
+    <script>
+        (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+</body>
+</html>

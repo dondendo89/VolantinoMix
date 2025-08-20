@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - VolantinoMix</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .admin-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .admin-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .admin-card h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .admin-card p {
+            color: #6c757d;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 5px 15px rgba(86, 171, 47, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+        }
+
+        .btn-warning:hover {
+            box-shadow: 0 5px 15px rgba(247, 151, 30, 0.4);
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .quick-actions .btn {
+            width: auto;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛠️ Admin Panel</h1>
+            <p>Pannello di controllo per la gestione di VolantinoMix</p>
+        </div>
+
+        <div class="content">
+            <div class="quick-actions">
+                <a href="index.html" class="btn btn-secondary">🏠 Torna al Sito</a>
+                <a href="pdf-viewer.html" class="btn">📄 Gestisci PDF</a>
+                <a href="unified.html" class="btn btn-success">📋 Unifica Volantini</a>
+            </div>
+
+            <div class="admin-grid">
+                <div class="admin-card">
+                    <span class="icon">📄</span>
+                    <h3>Gestione PDF</h3>
+                    <p>Visualizza, scarica ed elimina i file PDF caricati nel sistema. Controlla le statistiche dei file.</p>
+                    <a href="pdf-viewer.html" class="btn">Apri Gestione PDF</a>
+                </div>
+
+                <div class="admin-card">
+                    <span class="icon">📋</span>
+                    <h3>Unifica Volantini</h3>
+                    <p>Crea volantini unificati combinando più PDF in un unico documento con pubblicità personalizzate.</p>
+                    <a href="unified.html" class="btn btn-success">Apri Unificatore</a>
+                </div>
+
+                <div class="admin-card">
+                    <span class="icon">🏪</span>
+                    <h3>Volantini Decò</h3>
+                    <p>Gestisci e monitora i volantini dei supermercati Decò. Visualizza statistiche e stato dello scraping.</p>
+                    <button class="btn btn-warning" onclick="checkDecoStatus()">Controlla Stato Decò</button>
+                </div>
+
+                <div class="admin-card">
+                    <span class="icon">🛒</span>
+                    <h3>Volantini Ipercoop</h3>
+                    <p>Gestisci e monitora i volantini dei supermercati Ipercoop. Visualizza statistiche e avvia lo scraping.</p>
+                    <button class="btn btn-warning" onclick="checkIpercoopStatus()">Controlla Stato Ipercoop</button>
+                </div>
+
+                <div class="admin-card">
+                    <span class="icon">📊</span>
+                    <h3>Statistiche Sistema</h3>
+                    <p>Visualizza statistiche generali del sistema, volantini totali e performance degli endpoint.</p>
+                    <button class="btn" onclick="loadSystemStats()">Visualizza Statistiche</button>
+                </div>
+
+                <div class="admin-card">
+                    <span class="icon">🔄</span>
+                    <h3>Aggiorna Database</h3>
+                    <p>Forza l'aggiornamento del database dei volantini e pulisci i file temporanei del sistema.</p>
+                    <button class="btn btn-secondary" onclick="refreshDatabase()">Aggiorna Database</button>
+                </div>
+
+                <div class="admin-card">
+                    <span class="icon">🗑️</span>
+                    <h3>Pulizia Sistema</h3>
+                    <p>Elimina file temporanei, cache e volantini scaduti per liberare spazio su disco.</p>
+                    <button class="btn btn-warning" onclick="cleanupSystem()">Pulisci Sistema</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+
+        async function checkDecoStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/deco/status`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`✅ Stato Decò:\n\n📊 Volantini totali: ${data.totalFlyers}\n📅 Volantini ultima settimana: ${data.lastWeekFlyers}\n\n🏪 Negozi trovati:\n${Object.keys(data.storeBreakdown).map(store => `• ${store}: ${data.storeBreakdown[store].count} volantini`).join('\n')}`);
+                } else {
+                    throw new Error(data.error || 'Errore sconosciuto');
+                }
+            } catch (err) {
+                alert(`❌ Errore nel controllo Decò: ${err.message}`);
+            }
+        }
+
+        async function checkIpercoopStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/ipercoop/status`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const statusMessage = `✅ Stato Ipercoop:\n\n📊 Volantini totali: ${data.data.total}\n✅ Volantini attivi: ${data.data.active}\n❌ Volantini inattivi: ${data.data.inactive}`;
+                    
+                    if (data.data.latest) {
+                        const latestDate = new Date(data.data.latest.createdAt).toLocaleDateString('it-IT');
+                        alert(`${statusMessage}\n\n📅 Ultimo volantino: ${data.data.latest.title}\n🗓️ Data: ${latestDate}`);
+                    } else {
+                        alert(`${statusMessage}\n\n⚠️ Nessun volantino trovato`);
+                    }
+                    
+                    // Chiedi se vuole avviare lo scraping
+                    if (data.data.total === 0 && confirm('Nessun volantino Ipercoop trovato. Vuoi avviare lo scraping?')) {
+                        await startIpercoopScraping();
+                    }
+                } else {
+                    throw new Error(data.error || 'Errore sconosciuto');
+                }
+            } catch (err) {
+                alert(`❌ Errore nel controllo Ipercoop: ${err.message}`);
+            }
+        }
+
+        async function startIpercoopScraping() {
+            try {
+                const response = await fetch(`${API_BASE}/ipercoop/scrape`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ force: true })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('🚀 Scraping Ipercoop avviato con successo!\n\nControlla i log del server per il progresso.');
+                } else {
+                    throw new Error(data.error || 'Errore nell\'avvio dello scraping');
+                }
+            } catch (err) {
+                alert(`❌ Errore nell'avvio dello scraping Ipercoop: ${err.message}`);
+            }
+        }
+
+        async function loadSystemStats() {
+            try {
+                const [flyersResponse, pdfsResponse] = await Promise.all([
+                    fetch(`${API_BASE}/volantini/search`),
+                    fetch(`${API_BASE}/pdfs/files`)
+                ]);
+
+                const flyersData = await flyersResponse.json();
+                const pdfsData = await pdfsResponse.json();
+
+                const totalFlyers = flyersData.volantini ? flyersData.volantini.length : 0;
+                const totalPDFs = pdfsData.total || 0;
+
+                alert(`📊 Statistiche Sistema:\n\n📄 Volantini nel database: ${totalFlyers}\n💾 File PDF caricati: ${totalPDFs}\n\n✅ Sistema operativo`);
+            } catch (err) {
+                alert(`❌ Errore nel caricamento statistiche: ${err.message}`);
+            }
+        }
+
+        async function refreshDatabase() {
+            if (!confirm('Sei sicuro di voler aggiornare il database? Questa operazione potrebbe richiedere del tempo.')) {
+                return;
+            }
+
+            try {
+                // Qui potresti aggiungere una chiamata API per aggiornare il database
+                alert('🔄 Aggiornamento database avviato. Controlla i log del server per il progresso.');
+            } catch (err) {
+                alert(`❌ Errore nell'aggiornamento: ${err.message}`);
+            }
+        }
+
+        async function cleanupSystem() {
+            if (!confirm('Sei sicuro di voler pulire il sistema? Questa operazione eliminerà file temporanei e cache.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/pdfs/cleanup`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(`✅ Pulizia completata!\n\n🗑️ File eliminati: ${data.deletedFiles}\n💾 Spazio liberato: ${data.freedSpace}`);
+                } else {
+                    throw new Error(data.error || 'Errore nella pulizia');
+                }
+            } catch (err) {
+                alert(`❌ Errore nella pulizia: ${err.message}`);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+# Dipendenze Python per VolantinoMix Scraper
+# Compatibile con Python 3.9+
+
+# Web scraping
+requests>=2.28.0
+beautifulsoup4>=4.11.0
+lxml>=4.9.0
+
+# Utilità
+pathliblib>=1.0.0  # Per gestione path (già incluso in Python 3.4+)
+
+# Optional: per parsing HTML più veloce
+html5lib>=1.1
+
+# Optional: per gestione avanzata delle sessioni
+requests-cache>=0.9.0
+
+# Optional: per progress bar durante download
+tqdm>=4.64.0

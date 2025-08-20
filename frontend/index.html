@@ -3,12 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VolantinoMix - Trova e Unisci Volantini</title>
+    <title>VolantinoMix - Trova e Unisci Volantini nella Tua Zona</title>
+    <meta name="description" content="Trova volantini promozionali nella tua zona, selezionali e uniscili in un unico PDF. Scarica, condividi via WhatsApp ed Email.">
+    <meta name="keywords" content="volantini, offerte, promozioni, PDF, CAP, geolocalizzazione, shopping">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    
+    <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXX" crossorigin="anonymous"></script>
+    
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "VolantinoMix",
+        "description": "Trova e unisci volantini promozionali nella tua zona",
+        "url": "https://volantinoMix.com",
+        "applicationCategory": "Shopping",
+        "operatingSystem": "Web Browser"
+    }
+    </script>
 </head>
 <body>
     <!-- Header -->
@@ -22,7 +39,11 @@
                     <a href="#" class="nav-link active">Home</a>
                     <a href="#" class="nav-link">Categorie</a>
                     <a href="#" class="nav-link">Preferiti</a>
+                    <a href="pdf-viewer.html" class="nav-link" title="Visualizza PDF">📄 PDF</a>
                     <a href="#" class="nav-link">Login</a>
+                    <button id="notification-btn" class="notification-btn" title="Attiva notifiche">
+                        🔔
+                    </button>
                 </nav>
                 <div class="mobile-menu-toggle">
                     <span></span>
@@ -36,24 +57,31 @@
     <!-- Main Content -->
     <main class="main">
         <div class="container">
+            <!-- Banner AdSense Responsive Top -->
+            <div class="ad-banner ad-banner-top">
+                <!-- Google AdSense Banner Top -->
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-XXXXXXXXXX"
+                     data-ad-slot="XXXXXXXXXX"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>
+                     (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
+            </div>
+
             <!-- Hero Section -->
             <section class="hero">
-                <h2>Trova e Unisci i Volantini della Tua Zona</h2>
+                <h2>Trova e Unisci i Volantini dei Tuoi Supermercati Preferiti</h2>
                 <p>Seleziona i volantini che ti interessano e crea un unico PDF personalizzato</p>
                 
                 <!-- Search Section -->
                 <div class="search-section">
                     <div class="search-input-group">
-                        <input type="text" id="cap-input" placeholder="Inserisci il tuo CAP" class="search-input">
-                        <button id="search-btn" class="search-btn">Cerca</button>
-                    </div>
-                    <div class="location-section">
-                        <button id="geolocation-btn" class="geolocation-btn">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
-                            </svg>
-                            Usa la mia posizione
-                        </button>
+                        <input type="text" id="store-search" class="search-input" placeholder="Cerca per nome supermercato (es. Coop, Esselunga...)" />
+                        <button id="search-btn" class="search-btn">Cerca Volantini</button>
+                        <button id="clear-search-btn" class="clear-btn">Mostra Tutti</button>
                     </div>
                 </div>
             </section>
@@ -73,15 +101,20 @@
                     </div>
                 </div>
                 
-                <!-- AdSense Banner -->
-                <div class="ad-banner">
+                <!-- Banner AdSense tra le card -->
+                <div class="ad-banner ad-banner-middle">
+                    <!-- Google AdSense Medium Rectangle -->
                     <ins class="adsbygoogle"
                          style="display:block"
                          data-ad-client="ca-pub-XXXXXXXXXX"
                          data-ad-slot="XXXXXXXXXX"
-                         data-ad-format="auto"
-                         data-full-width-responsive="true"></ins>
+                         data-ad-format="rectangle"></ins>
+                    <script>
+                         (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
                 </div>
+                
+
 
                 <div id="volantini-grid" class="volantini-grid">
                     <!-- Volantini cards will be populated here -->
@@ -100,7 +133,38 @@
                         Genera Volantino Unico
                     </button>
                 </div>
+                
+                <!-- PDF Result Section -->
+                <div id="pdf-result" class="pdf-result" style="display: none;">
+                    <!-- Il risultato della generazione del PDF verrà mostrato qui -->
+                </div>
             </section>
+            
+            <!-- Banner AdSense Bottom -->
+            <div class="ad-banner ad-banner-bottom">
+                <!-- Google AdSense Banner Bottom -->
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-XXXXXXXXXX"
+                     data-ad-slot="XXXXXXXXXX"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>
+                     (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
+            </div>
+            
+            <!-- Sidebar AdSense per Desktop -->
+            <div class="ad-sidebar" id="adSidebar">
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-XXXXXXXXXX"
+                     data-ad-slot="XXXXXXXXXX"
+                     data-ad-format="vertical"></ins>
+                <script>
+                     (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
+            </div>
         </div>
     </main>
 

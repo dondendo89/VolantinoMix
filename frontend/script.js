@@ -5,30 +5,91 @@ class VolantinoMix {
         this.selectedVolantini = new Set();
         this.volantiniData = [];
         this.currentLocation = null;
-        this.init();
+        this.debugMode = true; // Abilita i log di debug
+        this.log('VolantinoMix inizializzato');
+    }
+
+    log(message, data = null) {
+        if (this.debugMode) {
+            console.log(`[VolantinoMix] ${message}`, data || '');
+        }
+    }
+
+    error(message, error = null) {
+        console.error(`[VolantinoMix ERROR] ${message}`, error || '');
     }
 
     init() {
+        this.log('Inizializzazione app...');
         this.bindEvents();
         this.requestNotificationPermission();
-        this.loadSampleData();
+        // Carica automaticamente tutti i volantini all'avvio
+        this.searchVolantini();
+        this.log('App inizializzata');
     }
 
     bindEvents() {
+        this.log('Binding eventi...');
+        
         // Search functionality
-        document.getElementById('search-btn').addEventListener('click', () => this.searchVolantini());
-        document.getElementById('cap-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.searchVolantini();
-        });
-
-        // Geolocation
-        document.getElementById('geolocation-btn').addEventListener('click', () => this.getCurrentLocation());
+        const searchBtn = document.getElementById('search-btn');
+        if (searchBtn) {
+            searchBtn.addEventListener('click', () => {
+                this.log('Click su search button');
+                this.searchVolantini();
+            });
+            this.log('Search button trovato e collegato');
+        } else {
+            this.log('Search button NON trovato');
+        }
+        
+        // Clear search functionality
+        const clearSearchBtn = document.getElementById('clear-search-btn');
+        if (clearSearchBtn) {
+            clearSearchBtn.addEventListener('click', () => {
+                this.log('Click su clear search button');
+                this.clearSearch();
+            });
+            this.log('Clear search button trovato e collegato');
+        }
+        
+        // Search input enter key
+        const storeSearchInput = document.getElementById('store-search');
+        if (storeSearchInput) {
+            storeSearchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.log('Enter premuto nel campo ricerca');
+                    this.searchVolantini();
+                }
+            });
+            this.log('Store search input trovato e collegato');
+        }
+        
+        // Filtro supermercati rimosso - ora carica sempre tutti i volantini
 
         // Generate PDF
-        document.getElementById('generate-btn').addEventListener('click', () => this.generatePDF());
+        const generateBtn = document.getElementById('generate-btn');
+        if (generateBtn) {
+            generateBtn.addEventListener('click', () => {
+                this.log('Click su generate PDF button');
+                this.generatePDF();
+            });
+            this.log('Generate button trovato e collegato');
+        } else {
+            this.log('Generate button NON trovato');
+        }
 
         // Mobile menu toggle
-        document.querySelector('.mobile-menu-toggle').addEventListener('click', () => this.toggleMobileMenu());
+        const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+        if (mobileMenuToggle) {
+            mobileMenuToggle.addEventListener('click', () => this.toggleMobileMenu());
+        }
+        
+        // Notification button
+        const notificationBtn = document.getElementById('notification-btn');
+        if (notificationBtn) {
+            notificationBtn.addEventListener('click', () => this.requestNotificationPermission());
+        }
     }
 
     async requestNotificationPermission() {
@@ -37,18 +98,64 @@ class VolantinoMix {
         }
     }
 
-    showNotification(title, message) {
+    showNotification(title, message, type = 'info') {
+        // Verifica se le notifiche browser sono supportate e autorizzate
         if ('Notification' in window && Notification.permission === 'granted') {
             new Notification(title, {
                 body: message,
-                icon: '/favicon.ico'
+                icon: '/favicon.ico',
+                badge: '/favicon.ico',
+                tag: 'volantino-notification'
             });
         }
+        
+        // Implementazione notifiche toast
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <div class="notification-content">
+                <h4>${title}</h4>
+                <p>${message}</p>
+                <button class="notification-close">&times;</button>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto-remove dopo 5 secondi
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 5000);
+        
+        // Rimozione manuale
+        notification.querySelector('.notification-close').addEventListener('click', () => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        });
     }
 
     toggleMobileMenu() {
         const navMenu = document.querySelector('.nav-menu');
         navMenu.classList.toggle('mobile-open');
+    }
+
+    // Richiedi permesso per le notifiche
+    requestNotificationPermission() {
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission().then(permission => {
+                updateNotificationButtonState();
+                if (permission === 'granted') {
+                    this.showNotification('Notifiche attivate!', 'Riceverai aggiornamenti sui nuovi volantini', 'success');
+                }
+            });
+        } else if (Notification.permission === 'granted') {
+            this.showNotification('Notifiche già attive', 'Stai già ricevendo le notifiche', 'info');
+        } else {
+            this.showNotification('Notifiche bloccate', 'Abilita le notifiche dalle impostazioni del browser', 'warning');
+        }
     }
 
     async getCurrentLocation() {
@@ -106,37 +213,96 @@ class VolantinoMix {
     }
 
     async searchVolantini() {
-        const cap = document.getElementById('cap-input').value.trim();
+        this.log('=== INIZIO RICERCA VOLANTINI ===');
         
-        if (!cap && !this.currentLocation) {
-            alert('Inserisci un CAP o usa la geolocalizzazione');
-            return;
-        }
-
         this.showLoading(true);
         
         try {
-            // Simulate API call
-            await this.delay(1500);
+            // Ottieni il valore del campo di ricerca supermercato
+            const storeSearchInput = document.getElementById('store-search');
+            const storeQuery = storeSearchInput ? storeSearchInput.value.trim() : '';
             
-            const filteredVolantini = this.volantiniData.filter(volantino => {
-                if (cap) {
-                    return volantino.cap.includes(cap.substring(0, 3));
+            const searchParams = new URLSearchParams();
+            searchParams.append('limit', '50');
+            
+            // Aggiungi il filtro supermercato se specificato
+            if (storeQuery) {
+                searchParams.append('store', storeQuery);
+                this.log('🏪 Ricerca volantini per supermercato:', storeQuery);
+            } else {
+                this.log('🏪 Caricamento tutti i volantini (nessun filtro supermercato)');
+            }
+            
+            const url = `http://localhost:5000/api/volantini/search?${searchParams.toString()}`;
+            this.log('URL chiamata API:', url);
+            
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Request-Source': 'VolantinoMix-Frontend',
+                    'X-Request-Type': 'search-all-stores'
                 }
-                return true; // If using geolocation, show all for demo
             });
-
-            this.renderVolantini(filteredVolantini);
+            this.log('Risposta API ricevuta - Status:', response.status, 'StatusText:', response.statusText);
             
-            if (filteredVolantini.length === 0) {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            this.log('Dati JSON ricevuti:', data);
+            const volantini = data.data || [];
+            this.log('Array volantini estratto:', volantini.length, 'elementi');
+            
+            // Log dei supermercati trovati
+            const supermercati = [...new Set(volantini.map(v => v.store).filter(Boolean))];
+            this.log('🏪 Supermercati trovati:', supermercati.join(', '));
+            this.log('📊 Volantini per supermercato:', supermercati.map(store => ({
+                supermercato: store,
+                count: volantini.filter(v => v.store === store).length
+            })));
+            
+            this.log('📊 Volantini da renderizzare:', volantini.length);
+            this.log('🎨 Chiamata renderVolantini con', volantini.length, 'volantini');
+            this.renderVolantini(volantini);
+            
+            if (volantini.length === 0) {
                 this.showEmptyState();
+                if (storeQuery) {
+                    this.showNotification('Nessun risultato', `Nessun volantino trovato per "${storeQuery}". Prova con un altro nome.`, 'info');
+                } else {
+                    this.showNotification('Nessun volantino', 'Non ci sono volantini disponibili al momento.', 'info');
+                }
+            } else {
+                if (storeQuery) {
+                    this.showNotification('Ricerca completata', `Trovati ${volantini.length} volantini per "${storeQuery}"`, 'success');
+                } else {
+                    this.showNotification('Volantini caricati', `Caricati ${volantini.length} volantini disponibili`, 'success');
+                }
             }
         } catch (error) {
-            console.error('Errore ricerca:', error);
-            alert('Errore durante la ricerca. Riprova.');
+            this.error('Errore durante ricerca volantini:', error);
+            this.showEmptyState();
+            this.showNotification('Errore', 'Impossibile caricare i volantini. Riprova più tardi.', 'error');
         } finally {
             this.showLoading(false);
+            this.log('Ricerca volantini completata');
         }
+    }
+
+    clearSearch() {
+        this.log('=== PULIZIA RICERCA ===');
+        
+        // Pulisci il campo di ricerca
+        const storeSearchInput = document.getElementById('store-search');
+        if (storeSearchInput) {
+            storeSearchInput.value = '';
+            this.log('Campo ricerca pulito');
+        }
+        
+        // Ricarica tutti i volantini
+        this.searchVolantini();
     }
 
     showLoading(show) {
@@ -152,13 +318,66 @@ class VolantinoMix {
     }
 
     renderVolantini(volantini) {
+        this.log('=== RENDERING VOLANTINI ===');
+        this.log('Numero volantini da renderizzare:', volantini.length);
+        this.log('Dettagli volantini ricevuti:', volantini.map(v => ({
+            id: v._id || v.id,
+            store: v.store,
+            title: v.title
+        })));
+        
+        // DEBUG: Verifica se i volantini vengono effettivamente aggiunti al DOM
+        const gridElement = document.getElementById('volantini-grid');
+        this.log('🎯 Elemento grid trovato:', !!gridElement);
+        this.log('🎯 Grid innerHTML prima del rendering:', gridElement?.innerHTML?.length || 0, 'caratteri');
+        
+        // Salva i dati dei volantini per uso successivo
+        this.volantiniData = volantini;
+        this.log('Dati volantini salvati in this.volantiniData:', this.volantiniData.length);
+        
+        // Manteniamo le selezioni anche quando cambiamo filtro
+        // Non rimuoviamo più le selezioni quando cambiamo filtro
+        // Commentiamo il codice che rimuove le selezioni obsolete
+        /*
+        const currentIds = new Set(volantini.map(v => v._id || v.id));
+        const obsoleteIds = Array.from(this.selectedVolantini).filter(id => !currentIds.has(id));
+        
+        if (obsoleteIds.length > 0) {
+            this.log('🧹 PULIZIA SELEZIONI OBSOLETE:');
+            this.log('ID obsoleti trovati:', obsoleteIds);
+            obsoleteIds.forEach(id => {
+                this.selectedVolantini.delete(id);
+                this.log('Rimosso ID obsoleto dalla selezione:', id);
+            });
+            this.log('Selezioni pulite. Nuova selezione:', Array.from(this.selectedVolantini));
+        } else {
+            this.log('✅ Nessuna selezione obsoleta trovata');
+        }
+        */
+        this.log('✅ Mantenute tutte le selezioni precedenti:', Array.from(this.selectedVolantini));
+        
         const grid = document.getElementById('volantini-grid');
+        if (!grid) {
+            this.error('Elemento volantini-grid non trovato!');
+            return;
+        }
+        
         grid.innerHTML = '';
+        this.log('Grid pulita, inizio creazione cards...');
 
         volantini.forEach((volantino, index) => {
+            this.log(`Creazione card ${index + 1}/${volantini.length} per:`, {
+                id: volantino._id || volantino.id,
+                store: volantino.store,
+                title: volantino.title || volantino.store
+            });
             const card = this.createVolantinoCard(volantino, index);
             grid.appendChild(card);
+            this.log(`✅ Card ${index + 1} aggiunta al DOM. Grid children count:`, grid.children.length);
         });
+        
+        this.log('🎯 Grid innerHTML dopo il rendering:', grid.innerHTML.length, 'caratteri');
+        this.log('🎯 Numero totale di card nella grid:', grid.children.length);
 
         // Add fade-in animation
         setTimeout(() => {
@@ -168,12 +387,40 @@ class VolantinoMix {
                 }, index * 100);
             });
         }, 100);
+        
+        this.log('Cards create, aggiornamento contatori');
+        this.updateSelectedCount();
+        this.updateGenerateButton();
+        this.log('=== FINE RENDERING VOLANTINI ===');
     }
 
     createVolantinoCard(volantino, index) {
         const card = document.createElement('div');
         card.className = 'volantino-card';
-        card.dataset.id = volantino.id;
+        
+        // Support both API format (_id) and sample data format (id)
+        const id = volantino._id || volantino.id;
+        card.dataset.id = id;
+        
+        // Verifica se questo volantino è già selezionato
+        const isSelected = this.selectedVolantini.has(id);
+        if (isSelected) {
+            card.classList.add('selected');
+            this.log(`Card ${id} creata con stato selezionato`);
+        }
+        
+        // Support both API format (location object) and sample data format (location string)
+        const location = typeof volantino.location === 'object' 
+            ? `${volantino.location.address}, ${volantino.location.city}` 
+            : volantino.location;
+            
+        // Format dates for API format
+        const validFrom = volantino.validFrom instanceof Date 
+            ? volantino.validFrom.toLocaleDateString('it-IT')
+            : volantino.validFrom;
+        const validTo = volantino.validTo instanceof Date 
+            ? volantino.validTo.toLocaleDateString('it-IT')
+            : volantino.validTo;
 
         card.innerHTML = `
             <div class="card-header">
@@ -182,17 +429,17 @@ class VolantinoMix {
                 </div>
                 <div class="card-info">
                     <h4>${volantino.store}</h4>
-                    <p>${volantino.location}</p>
+                    <p>${location}</p>
                 </div>
             </div>
             <div class="card-details">
                 <div class="detail-row">
                     <span class="detail-label">Valido dal:</span>
-                    <span class="detail-value">${volantino.validFrom}</span>
+                    <span class="detail-value">${validFrom}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Valido fino al:</span>
-                    <span class="detail-value">${volantino.validTo}</span>
+                    <span class="detail-value">${validTo}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Pagine:</span>
@@ -204,10 +451,10 @@ class VolantinoMix {
                 </div>
             </div>
             <div class="card-actions">
-                <button class="select-btn" onclick="volantino.toggleSelection('${volantino.id}')">
-                    Seleziona
+                <button class="select-btn ${isSelected ? 'selected' : ''}" onclick="volantino.toggleSelection('${id}')">
+                    ${isSelected ? 'Selezionato' : 'Seleziona'}
                 </button>
-                <button class="preview-btn" onclick="volantino.previewVolantino('${volantino.id}')">
+                <button class="preview-btn" onclick="volantino.previewVolantino('${id}')">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -220,23 +467,70 @@ class VolantinoMix {
     }
 
     toggleSelection(id) {
-        const card = document.querySelector(`[data-id="${id}"]`);
-        const btn = card.querySelector('.select-btn');
+        this.log('=== TOGGLE SELECTION ===');
+        this.log('ID volantino cliccato:', id);
+        this.log('Stato attuale selectedVolantini (Set):', Array.from(this.selectedVolantini));
         
-        if (this.selectedVolantini.has(id)) {
+        // Trova il volantino nei dati
+        const volantino = this.volantiniData.find(v => (v._id || v.id) === id);
+        if (!volantino) {
+            this.error('ERRORE: Volantino non trovato nei dati per ID:', id);
+            this.log('Volantini disponibili:', this.volantiniData.map(v => ({
+                id: v._id || v.id,
+                store: v.store,
+                title: v.title
+            })));
+            return;
+        }
+        
+        this.log('Volantino trovato nei dati:', {
+            id: volantino._id || volantino.id,
+            store: volantino.store,
+            title: volantino.title
+        });
+        
+        const card = document.querySelector(`[data-id="${id}"]`);
+        if (!card) {
+            this.error('Card non trovata per ID:', id);
+            return;
+        }
+        
+        const btn = card.querySelector('.select-btn');
+        if (!btn) {
+            this.error('Bottone select non trovato nella card per ID:', id);
+            return;
+        }
+        
+        const wasSelected = this.selectedVolantini.has(id);
+        this.log('Volantino era già selezionato:', wasSelected);
+        
+        if (wasSelected) {
             this.selectedVolantini.delete(id);
             card.classList.remove('selected');
             btn.textContent = 'Seleziona';
             btn.classList.remove('selected');
+            this.log('✗ VOLANTINO RIMOSSO dalla selezione:', volantino.store);
         } else {
             this.selectedVolantini.add(id);
             card.classList.add('selected');
             btn.textContent = 'Selezionato';
             btn.classList.add('selected');
+            this.log('✓ VOLANTINO AGGIUNTO alla selezione:', volantino.store);
         }
 
+        this.log('STATO SELEZIONE AGGIORNATO:');
+        this.log('- Nuovo stato selectedVolantini (Set):', Array.from(this.selectedVolantini));
+        this.log('- Numero totale volantini selezionati:', this.selectedVolantini.size);
+        this.log('- Lista dettagliata volantini selezionati:', 
+            Array.from(this.selectedVolantini).map(selectedId => {
+                const v = this.volantiniData.find(vol => (vol._id || vol.id) === selectedId);
+                return v ? { id: selectedId, store: v.store, title: v.title } : { id: selectedId, error: 'non trovato' };
+            })
+        );
+        
         this.updateSelectedCount();
         this.updateGenerateButton();
+        this.log('=== FINE TOGGLE SELECTION ===');
     }
 
     updateSelectedCount() {
@@ -265,50 +559,209 @@ class VolantinoMix {
     }
 
     async generatePDF() {
-        if (this.selectedVolantini.size === 0) return;
-
-        const btn = document.getElementById('generate-btn');
-        const originalText = btn.innerHTML;
+        this.log('=== INIZIO GENERAZIONE PDF ===');
+        this.log('Volantini selezionati (Set):', Array.from(this.selectedVolantini));
+        this.log('Numero volantini selezionati:', this.selectedVolantini.size);
         
-        btn.innerHTML = '<div class="spinner" style="width: 24px; height: 24px; margin-right: 8px;"></div>Generazione in corso...';
-        btn.disabled = true;
-
+        if (this.selectedVolantini.size === 0) {
+            this.error('ERRORE: Nessun volantino selezionato');
+            alert('Seleziona almeno un volantino per generare il PDF');
+            return;
+        }
+        
         try {
-            const selectedData = Array.from(this.selectedVolantini).map(id => 
-                this.volantiniData.find(v => v.id === id)
-            );
-
-            // Simulate PDF generation
-            await this.delay(3000);
+            // Mostra il loading
+            this.showLoading(true);
             
-            // In a real implementation, this would call the backend API
-            const response = await this.callGeneratePDFAPI(selectedData);
+            this.log('=== PREPARAZIONE DATI VOLANTINI ===');
             
-            if (response.success) {
-                this.showNotification('PDF Generato', 'Il tuo volantino unificato è pronto!');
-                // Redirect to unified PDF page
-                window.location.href = `unified.html?id=${response.pdfId}`;
-            } else {
-                throw new Error(response.error || 'Errore durante la generazione');
+            // Recupera i dati dei volantini selezionati dal backend
+            this.log('Recupero dati volantini selezionati dal backend...');
+            const selectedVolantiniData = await this.fetchSelectedVolantiniData(Array.from(this.selectedVolantini));
+            
+            this.log('=== RIEPILOGO DATI PREPARATI ===');
+            this.log('Numero volantini validi preparati:', selectedVolantiniData.length);
+            this.log('Dettagli completi volantini da inviare al backend:', selectedVolantiniData.map(v => ({
+                id: v._id || v.id,
+                store: v.store,
+                title: v.title,
+                pdfUrl: v.pdfUrl,
+                hasValidId: !!(v._id || v.id),
+                hasValidPdfUrl: !!v.pdfUrl
+            })));
+            
+            if (selectedVolantiniData.length === 0) {
+                throw new Error('Nessun volantino valido trovato per la generazione del PDF');
             }
+            
+            this.log('=== CHIAMATA API BACKEND ===');
+            
+            // Chiama l'API
+            const result = await this.callGeneratePDFAPI(selectedVolantiniData);
+            
+            if (result.success) {
+                this.log('✅ PDF generato con successo dal backend:', result);
+                
+                // Estrai i nomi dei supermercati selezionati
+                const supermercatiSelezionati = [...new Set(selectedVolantiniData.map(v => v.store))].sort();
+                const supermercatiText = supermercatiSelezionati.join(', ');
+                
+                this.log('🏪 DEBUG - Supermercati estratti dai volantini:', {
+                    volantiniProcessati: selectedVolantiniData.length,
+                    storesDaVolantini: selectedVolantiniData.map(v => v.store),
+                    supermercatiUnici: supermercatiSelezionati,
+                    testoFinale: supermercatiText
+                });
+                
+                // Mostra il risultato
+                const resultDiv = document.getElementById('pdf-result');
+                resultDiv.innerHTML = `
+                    <div class="result-success">
+                        <h3>✅ PDF Generato con Successo!</h3>
+                        <div class="pdf-info">
+                            <p><strong>Nome file:</strong> ${result.filename}</p>
+                            <p><strong>Supermercati inclusi:</strong> ${supermercatiText}</p>
+                            <p><strong>Dimensione:</strong> ${result.fileSize}</p>
+                            <p><strong>Pagine totali:</strong> ${result.totalPages}</p>
+                        </div>
+                        <div class="pdf-actions">
+                            <button onclick="window.open('${result.url}', '_blank')" class="btn btn-primary">
+                                📄 Visualizza PDF
+                            </button>
+                            <button onclick="volantino.downloadPDF('${result.url}', '${result.filename}')" class="btn btn-secondary">
+                                💾 Scarica PDF
+                            </button>
+                        </div>
+                        <div class="share-actions">
+                            <h4>🔗 Condividi PDF</h4>
+                            <div class="share-buttons">
+                                <button onclick="volantino.shareWhatsApp('${result.url}', '${result.filename}')" class="btn btn-share btn-whatsapp">
+                                    📱 WhatsApp
+                                </button>
+                                <button onclick="volantino.shareEmail('${result.url}', '${result.filename}')" class="btn btn-share btn-email">
+                                    📧 Email
+                                </button>
+                                <button onclick="volantino.copyLink('${result.url}')" class="btn btn-share btn-copy">
+                                    📋 Copia Link
+                                </button>
+                                <button onclick="volantino.shareGeneric('${result.url}', '${result.filename}')" class="btn btn-share btn-generic">
+                                    🔗 Condividi
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                resultDiv.style.display = 'block';
+                
+                // Mostra notifica di successo
+                this.showNotification(
+                    'PDF Generato!', 
+                    `Il tuo PDF con ${this.selectedVolantini.size} volantini è pronto`, 
+                    'success'
+                );
+                
+            } else {
+                throw new Error(result.message || 'Errore nella generazione del PDF');
+            }
+            
         } catch (error) {
-            console.error('Errore generazione PDF:', error);
-            alert('Errore durante la generazione del PDF. Riprova.');
+            this.error('❌ ERRORE durante la generazione del PDF:', error);
+            
+            // Mostra errore all'utente
+            const resultDiv = document.getElementById('pdf-result');
+            resultDiv.innerHTML = `
+                <div class="result-error">
+                    <h3>❌ Errore nella Generazione</h3>
+                    <p>${error.message}</p>
+                    <button onclick="location.reload()" class="btn btn-secondary">🔄 Riprova</button>
+                </div>
+            `;
+            resultDiv.style.display = 'block';
+            
+            // Mostra notifica di errore
+            this.showNotification(
+                'Errore PDF', 
+                'Si è verificato un errore durante la generazione del PDF', 
+                'error'
+            );
+            
         } finally {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
+            // Nascondi il loading
+            this.showLoading(false);
+            this.log('=== FINE GENERAZIONE PDF ===');
         }
     }
 
     async callGeneratePDFAPI(selectedVolantini) {
-        // Simulate API call
-        await this.delay(2000);
+        this.log('=== CHIAMATA API MERGE PDF ===');
+        this.log('Volantini selezionati da inviare:', selectedVolantini);
         
-        return {
-            success: true,
-            pdfId: 'pdf_' + Date.now(),
-            url: '/api/pdf/download/pdf_' + Date.now()
-        };
+        try {
+            // Estrai gli ID dei volantini selezionati
+            const flyerIds = selectedVolantini.map(v => v._id || v.id);
+            this.log('IDs estratti per API:', flyerIds);
+            
+            // Estrai i nomi dei supermercati selezionati
+            const supermercatiSelezionati = [...new Set(selectedVolantini.map(v => v.store).filter(Boolean))];
+            this.log('🏪 Supermercati selezionati per il merge:', supermercatiSelezionati.join(', '));
+            
+            const requestBody = {
+                flyerIds: flyerIds,
+                supermercati: supermercatiSelezionati,
+                includeAds: true,
+                adPositions: ['cover', 'intermediate', 'final'],
+                includeTOC: true
+            };
+            this.log('Body della richiesta:', requestBody);
+            
+            const apiUrl = 'http://localhost:5000/api/pdfs/merge';
+            this.log('URL API chiamata:', apiUrl);
+            
+            // Chiama l'API di merge con il parametro corretto
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Request-Source': 'VolantinoMix-Frontend',
+                    'X-Request-Type': 'merge-pdf',
+                    'X-Selected-Stores': supermercatiSelezionati.join(',')
+                },
+                body: JSON.stringify(requestBody)
+            });
+            
+            this.log('Risposta fetch ricevuta - Status:', response.status, 'OK:', response.ok);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                this.error(`Errore HTTP ${response.status}:`, errorText);
+                throw new Error(`Errore HTTP: ${response.status} - ${errorText}`);
+            }
+            
+            const result = await response.json();
+            this.log('Risultato JSON ricevuto:', result);
+            
+            if (result.success) {
+                const responseData = {
+                    success: true,
+                    pdfId: result.data.filename,
+                    url: `http://localhost:5000${result.data.downloadUrl}`,
+                    filename: result.data.filename,
+                    fileSize: result.data.fileSizeFormatted || result.data.fileSize,
+                    totalPages: result.data.totalPages
+                };
+                this.log('Dati di risposta preparati:', responseData);
+                return responseData;
+            } else {
+                this.error('API ha restituito success=false:', result.message);
+                throw new Error(result.message || 'Errore nella generazione del PDF');
+            }
+            
+        } catch (error) {
+            this.error('Errore nella chiamata API merge PDF:', error);
+            this.log('Tipo errore:', error.name);
+            this.log('Messaggio errore:', error.message);
+            throw error;
+        }
     }
 
     showEmptyState() {
@@ -324,88 +777,264 @@ class VolantinoMix {
         `;
     }
 
-    loadSampleData() {
-        // Sample data for demonstration
-        this.volantiniData = [
-            {
-                id: 'esselunga_001',
-                store: 'Esselunga',
-                location: 'Milano Centro',
-                validFrom: '15/01/2024',
-                validTo: '28/01/2024',
-                pages: 8,
-                category: 'Supermercato',
-                cap: ['20100', '20121', '20122'],
-                pdfUrl: '/samples/esselunga.pdf'
-            },
-            {
-                id: 'conad_001',
-                store: 'Conad',
-                location: 'Milano Porta Garibaldi',
-                validFrom: '10/01/2024',
-                validTo: '25/01/2024',
-                pages: 12,
-                category: 'Supermercato',
-                cap: ['20100', '20154'],
-                pdfUrl: '/samples/conad.pdf'
-            },
-            {
-                id: 'lidl_001',
-                store: 'Lidl',
-                location: 'Milano Bicocca',
-                validFrom: '18/01/2024',
-                validTo: '31/01/2024',
-                pages: 6,
-                category: 'Discount',
-                cap: ['20100', '20126'],
-                pdfUrl: '/samples/lidl.pdf'
-            },
-            {
-                id: 'mediaworld_001',
-                store: 'MediaWorld',
-                location: 'Milano San Siro',
-                validFrom: '12/01/2024',
-                validTo: '26/01/2024',
-                pages: 16,
-                category: 'Elettronica',
-                cap: ['20100', '20151'],
-                pdfUrl: '/samples/mediaworld.pdf'
-            },
-            {
-                id: 'ikea_001',
-                store: 'IKEA',
-                location: 'Milano Corsico',
-                validFrom: '01/01/2024',
-                validTo: '31/01/2024',
-                pages: 24,
-                category: 'Arredamento',
-                cap: ['20100', '20094'],
-                pdfUrl: '/samples/ikea.pdf'
-            },
-            {
-                id: 'carrefour_001',
-                store: 'Carrefour',
-                location: 'Milano Lampugnano',
-                validFrom: '20/01/2024',
-                validTo: '02/02/2024',
-                pages: 10,
-                category: 'Ipermercato',
-                cap: ['20100', '20151'],
-                pdfUrl: '/samples/carrefour.pdf'
-            }
-        ];
-    }
+
 
     delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
+
+    async fetchSelectedVolantiniData(selectedIds) {
+        this.log('=== RECUPERO DATI VOLANTINI SELEZIONATI ===');
+        this.log('ID volantini da recuperare:', selectedIds);
+        
+        const volantiniData = [];
+        const invalidIds = [];
+        
+        for (const id of selectedIds) {
+            try {
+                this.log(`Recupero dati per volantino ID: ${id}`);
+                
+                // Prima prova a cercare nei dati locali
+                let volantino = this.volantiniData.find(v => (v._id || v.id) === id);
+                
+                if (!volantino) {
+                    // Se non trovato nei dati locali, recupera dal backend
+                    this.log(`Volantino ${id} non trovato nei dati locali, recupero dal backend...`);
+                    
+                    const response = await fetch(`http://localhost:5000/api/flyers/${id}`, {
+                        headers: {
+                            'X-Request-Source': 'VolantinoMix-Frontend',
+                            'X-Request-Type': 'fetch-single-flyer'
+                        }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        volantino = data.data;
+                        this.log(`✓ Volantino ${id} recuperato dal backend:`, {
+                            id: volantino._id || volantino.id,
+                            store: volantino.store,
+                            title: volantino.title
+                        });
+                        this.log(`🏪 Supermercato: ${volantino.store || 'Non specificato'}`);
+                    } else if (response.status === 404) {
+                        this.error(`⚠️ Volantino ${id} non esiste più nel database (404) - rimuovo dalla selezione`);
+                        invalidIds.push(id);
+                        continue;
+                    } else {
+                        this.error(`Errore nel recupero del volantino ${id} dal backend:`, response.status);
+                        continue;
+                    }
+                }
+                
+                if (volantino) {
+                    volantiniData.push(volantino);
+                    this.log(`✓ Volantino ${id} aggiunto ai dati:`, {
+                        id: volantino._id || volantino.id,
+                        store: volantino.store,
+                        title: volantino.title,
+                        pdfUrl: volantino.pdfUrl
+                    });
+                } else {
+                    this.error(`ERRORE: Impossibile recuperare il volantino con ID: ${id}`);
+                    invalidIds.push(id);
+                }
+            } catch (error) {
+                this.error(`Errore durante il recupero del volantino ${id}:`, error);
+                invalidIds.push(id);
+            }
+        }
+        
+        // Rimuovi gli ID non validi dalla selezione
+        if (invalidIds.length > 0) {
+            this.log(`🧹 Pulizia ID non validi dalla selezione:`, invalidIds);
+            invalidIds.forEach(id => {
+                this.selectedVolantini.delete(id);
+                // Rimuovi anche dalla UI se la card esiste
+                const card = document.querySelector(`[data-id="${id}"]`);
+                if (card) {
+                    card.classList.remove('selected');
+                    const btn = card.querySelector('.select-btn');
+                    if (btn) {
+                        btn.textContent = 'Seleziona';
+                        btn.classList.remove('selected');
+                    }
+                }
+            });
+            this.updateSelectedCount();
+            this.updateGenerateButton();
+        }
+        
+        this.log('=== RIEPILOGO VOLANTINI RECUPERATI ===');
+        this.log('Numero volantini recuperati:', volantiniData.length);
+        this.log('Dettagli volantini recuperati:', volantiniData.map(v => ({
+            id: v._id || v.id,
+            store: v.store,
+            title: v.title,
+            hasValidPdfUrl: !!v.pdfUrl
+        })));
+        
+        return volantiniData;
+    }
+
+    // Funzioni di condivisione
+    downloadPDF(url, filename) {
+        try {
+            // Method 1: Try window.open for direct download
+            window.open(url, '_blank');
+            
+            // Method 2: Create and click link as fallback
+            setTimeout(() => {
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }, 500);
+            
+            this.showNotification('Download Avviato', 'Il download del PDF è iniziato!', 'success');
+        } catch (error) {
+            console.error('Errore download:', error);
+            this.showNotification('Errore Download', 'Errore durante il download. Riprova.', 'error');
+        }
+    }
+
+    shareWhatsApp(url, filename) {
+        const message = `🛒 Guarda questi volantini! Ho creato un PDF personalizzato con le migliori offerte: ${filename}\n\n📄 Scarica qui: ${url}`;
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+        this.log('Condivisione WhatsApp:', { url, filename });
+    }
+
+    shareEmail(url, filename) {
+        const subject = `🛒 Volantini Personalizzati - ${filename}`;
+        const body = `Ciao!\n\nHo creato un PDF personalizzato con i migliori volantini e offerte.\n\n📄 Nome file: ${filename}\n🔗 Scarica qui: ${url}\n\nBuono shopping! 🛍️`;
+        const emailUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.open(emailUrl, '_blank');
+        this.log('Condivisione Email:', { url, filename });
+    }
+
+    async copyLink(url) {
+        try {
+            await navigator.clipboard.writeText(url);
+            this.showNotification('Link Copiato!', 'Il link del PDF è stato copiato negli appunti', 'success');
+            this.log('Link copiato:', url);
+        } catch (error) {
+            // Fallback per browser che non supportano clipboard API
+            const textArea = document.createElement('textarea');
+            textArea.value = url;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            this.showNotification('Link Copiato!', 'Il link del PDF è stato copiato negli appunti', 'success');
+            this.log('Link copiato (fallback):', url);
+        }
+    }
+
+    shareGeneric(url, filename) {
+        if (navigator.share) {
+            // Usa l'API nativa di condivisione se disponibile (principalmente mobile)
+            navigator.share({
+                title: `Volantini Personalizzati - ${filename}`,
+                text: '🛒 Guarda questi volantini! Ho creato un PDF personalizzato con le migliori offerte.',
+                url: url
+            }).then(() => {
+                this.log('Condivisione nativa completata:', { url, filename });
+            }).catch((error) => {
+                this.error('Errore condivisione nativa:', error);
+                this.fallbackShare(url, filename);
+            });
+        } else {
+            this.fallbackShare(url, filename);
+        }
+    }
+
+    fallbackShare(url, filename) {
+        // Fallback: copia il link e mostra opzioni
+        this.copyLink(url);
+        const shareText = `🛒 Volantini Personalizzati - ${filename}\n\n📄 Scarica qui: ${url}`;
+        
+        // Mostra un modal con opzioni di condivisione
+        const modal = document.createElement('div');
+        modal.className = 'share-modal';
+        modal.innerHTML = `
+            <div class="share-modal-content">
+                <h3>🔗 Condividi PDF</h3>
+                <p>Il link è stato copiato negli appunti. Puoi condividerlo su:</p>
+                <div class="share-options">
+                    <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}" target="_blank" class="btn btn-facebook">📘 Facebook</a>
+                    <a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}" target="_blank" class="btn btn-twitter">🐦 Twitter</a>
+                    <a href="https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent('🛒 Volantini Personalizzati')}" target="_blank" class="btn btn-telegram">✈️ Telegram</a>
+                </div>
+                <button onclick="this.parentElement.parentElement.remove()" class="btn btn-secondary">Chiudi</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        // Rimuovi il modal dopo 10 secondi
+        setTimeout(() => {
+            if (modal.parentElement) {
+                modal.remove();
+            }
+        }, 10000);
+        
+        this.log('Fallback share mostrato:', { url, filename });
+    }
 }
 
-// Initialize the application
-const volantino = new VolantinoMix();
+// Initialize the application when DOM is ready
+let volantino;
 
-// Make methods available globally for onclick handlers
-window.volantino = volantino;
+// Wait for DOM to be fully loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+    initializeApp();
+}
+
+function initializeApp() {
+    volantino = new VolantinoMix();
+    volantino.init();
+    
+    // Make methods available globally for onclick handlers
+    window.volantino = volantino;
+}
+
+// Initialize notifications when DOM is loaded
+function initializeNotifications() {
+    // Update notification button state
+    updateNotificationButtonState();
+    
+    // Check for new volantini periodically
+    setInterval(() => {
+        checkForNewVolantini();
+    }, 300000); // Check every 5 minutes
+}
+
+function updateNotificationButtonState() {
+    const btn = document.getElementById('notification-btn');
+    if (btn && 'Notification' in window) {
+        if (Notification.permission === 'granted') {
+            btn.classList.add('active');
+            btn.title = 'Notifiche attive';
+        } else {
+            btn.classList.remove('active');
+            btn.title = 'Attiva notifiche';
+        }
+    }
+}
+
+function checkForNewVolantini() {
+    // Simulate checking for new volantini
+    if (Math.random() > 0.8) { // 20% chance of new volantini
+        volantino.showNotification('Nuovi volantini disponibili!', 'Controlla i nuovi sconti nella tua zona', 'info');
+    }
+}
+
+// Initialize notifications
+initializeNotifications();
 
 // Service Worker registration for PWA capabilities
 if ('serviceWorker' in navigator) {
