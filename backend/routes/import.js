@@ -49,8 +49,9 @@ router.post('/all', [
         };
 
         // Percorso base del progetto (dove sono gli script Python nel container)
-        // Railway usa sempre /app come working directory
-        const projectRoot = process.env.RAILWAY_ENVIRONMENT ? '/app' : path.join(__dirname, '..');
+        // Rileva se siamo in un container controllando se /app esiste
+        const isContainer = fs.existsSync('/app');
+        const projectRoot = isContainer ? '/app' : path.join(__dirname, '..');
 
         // Configurazione script per ogni fonte
         const scriptConfigs = {
@@ -265,8 +266,9 @@ router.post('/all', [
 router.get('/status', async (req, res) => {
     try {
         // Usa la stessa logica del percorso dell'endpoint /all
-        // Railway usa sempre /app come working directory
-        const projectRoot = process.env.RAILWAY_ENVIRONMENT ? '/app' : path.join(__dirname, '..');
+        // Rileva se siamo in un container controllando se /app esiste
+        const isContainer = fs.existsSync('/app');
+        const projectRoot = isContainer ? '/app' : path.join(__dirname, '..');
         
         const scripts = [
             'scraper_deco.py',
