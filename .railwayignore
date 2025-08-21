@@ -1,0 +1,15 @@
+# Railway ignore file - force rebuild
+# This file forces Railway to recognize changes
+
+# Ignore local development files
+node_modules/
+.env
+.env.local
+*.log
+
+# Ignore temporary files
+/temp/
+/uploads/
+
+# Force rebuild timestamp
+# Last updated: 2024-01-20

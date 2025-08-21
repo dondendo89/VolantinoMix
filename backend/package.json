@@ -1,7 +1,8 @@
 {
   "name": "volantinomix-backend",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Backend API per VolantinoMix - Piattaforma per unire volantini PDF",
+  "buildTimestamp": "2024-01-20T15:30:00Z",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
