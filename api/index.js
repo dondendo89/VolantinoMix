@@ -62,7 +62,8 @@ app.get('/health', (req, res) => {
 
 // Specific route for /admin/import to serve import-admin.html
 app.get('/admin/import', (req, res) => {
-  res.sendFile(path.join(__dirname, '../backend/public/import-admin.html'));
+  const filePath = path.resolve(__dirname, '../backend/public/import-admin.html');
+  res.sendFile(filePath);
 });
 
 // Serve static files from backend/public
