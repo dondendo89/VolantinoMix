@@ -98,7 +98,6 @@ test_*.js
 # PDF files
 *.pdf
 volantini/
-public/
 backend/public/pdfs/
 
 # Python cache
