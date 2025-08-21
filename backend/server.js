@@ -32,6 +32,9 @@ const jobScheduler = require('./services/jobScheduler');
 // Create Express app
 const app = express();
 
+// Trust proxy for Railway deployment
+app.set('trust proxy', 1);
+
 // Connect to database (temporarily disabled - MongoDB not installed)
 connectDB();
 
@@ -69,7 +72,12 @@ const limiter = rateLimit({
         error: 'Troppi tentativi, riprova tra 15 minuti'
     },
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
+    // Disable validation for Railway deployment
+    validate: {
+        xForwardedForHeader: false,
+        trustProxy: false
+    }
 });
 
 app.use('/api/', limiter);
@@ -80,6 +88,11 @@ const uploadLimiter = rateLimit({
     max: 10, // limit each IP to 10 uploads per hour
     message: {
         error: 'Limite upload raggiunto, riprova tra un\'ora'
+    },
+    // Disable validation for Railway deployment
+    validate: {
+        xForwardedForHeader: false,
+        trustProxy: false
     }
 });
 
@@ -100,7 +113,8 @@ const corsOptions = {
             'http://localhost:5000',
             'https://volantinomix.com',
             'https://www.volantinomix.com',
-            'https://volantinomix.vercel.app'
+            'https://volantinomix.vercel.app',
+            'https://volantinomix-production.up.railway.app'
         ];
         
         // Allow requests with no origin (mobile apps, etc.)
