@@ -263,6 +263,44 @@ router.post('/all', [
 });
 
 // GET /api/import/status - Stato degli script di importazione
+// Temporary debug endpoint to list files
+router.get('/debug-files', async (req, res) => {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    
+    const checkDir = (dirPath) => {
+      try {
+        const files = fs.readdirSync(dirPath);
+        return {
+          exists: true,
+          files: files.filter(f => f.endsWith('.py')),
+          allFiles: files
+        };
+      } catch (err) {
+        return { exists: false, error: err.message };
+      }
+    };
+    
+    res.json({
+      success: true,
+      directories: {
+        '/': checkDir('/'),
+        '/app': checkDir('/app'),
+        cwd: checkDir(process.cwd()),
+        __dirname: checkDir(__dirname)
+      },
+      environment: {
+        NODE_ENV: process.env.NODE_ENV,
+        __dirname,
+        cwd: process.cwd()
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 router.get('/status', async (req, res) => {
     try {
         // Usa la stessa logica del percorso dell'endpoint /all
