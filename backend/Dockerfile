@@ -13,8 +13,8 @@ RUN npm install --production
 # Copy source code
 COPY . .
 
-# Create uploads directory
-RUN mkdir -p uploads public
+# Create uploads directory (public already exists from COPY)
+RUN mkdir -p uploads
 
 # Set proper permissions
 RUN chown -R node:node /app
