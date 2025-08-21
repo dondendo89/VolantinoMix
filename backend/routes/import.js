@@ -48,8 +48,8 @@ router.post('/all', [
             duration: null
         };
 
-        // Percorso base del progetto
-        const projectRoot = path.join(__dirname, '../..');
+        // Percorso base del backend (dove sono ora gli script Python)
+        const projectRoot = path.join(__dirname, '..');
 
         // Configurazione script per ogni fonte
         const scriptConfigs = {
