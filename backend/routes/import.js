@@ -263,7 +263,8 @@ router.post('/all', [
 // GET /api/import/status - Stato degli script di importazione
 router.get('/status', async (req, res) => {
     try {
-        const projectRoot = path.join(__dirname, '../..');
+        // Usa la stessa logica del percorso dell'endpoint /all
+        const projectRoot = process.env.NODE_ENV === 'production' ? '/app' : path.join(__dirname, '..');
         
         const scripts = [
             'scraper_deco.py',
@@ -275,7 +276,12 @@ router.get('/status', async (req, res) => {
         const status = {
             success: true,
             scripts: {},
-            projectRoot
+            projectRoot,
+            environment: {
+                NODE_ENV: process.env.NODE_ENV,
+                __dirname: __dirname,
+                cwd: process.cwd()
+            }
         };
 
         scripts.forEach(script => {
