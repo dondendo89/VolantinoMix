@@ -32,7 +32,7 @@ const jobScheduler = require('./services/jobScheduler');
 // Create Express app
 const app = express();
 
-// Trust proxy for Railway deployment
+// Trust proxy for Vercel deployment
 app.set('trust proxy', 1);
 
 // Connect to database (temporarily disabled - MongoDB not installed)
@@ -73,7 +73,7 @@ const limiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
-    // Disable validation for Railway deployment
+    // Disable validation for deployment
     validate: {
         xForwardedForHeader: false,
         trustProxy: false
@@ -114,7 +114,7 @@ const corsOptions = {
             'https://volantinomix.com',
             'https://www.volantinomix.com',
             'https://volantinomix.vercel.app',
-            'https://volantinomix-production.up.railway.app'
+            'https://volantino-mix.vercel.app'
         ];
         
         // Allow requests with no origin (mobile apps, etc.)

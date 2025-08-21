@@ -147,6 +147,8 @@ downloads/
 *.json
 !package.json
 !package-lock.json
-!railway.json
+# Railway files removed
 *.pdf
 *.log
+.vercel
+.env*.local

@@ -13,7 +13,7 @@ const CONFIG = {
         }
         
         // Production fallback - replace with your actual backend URL
-        return 'https://volantinomix-production.up.railway.app';
+        return 'https://volantinomix-3wfh2j46w-dondendo89s-projects.vercel.app';
     })(),
     
     // API endpoints
