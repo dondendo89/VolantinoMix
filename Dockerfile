@@ -1,4 +1,4 @@
-# Use Node.js 18 LTS
+# Use Node.js 18 LTS - Updated for script path fix
 FROM node:18-alpine
 
 # Install Python for scraper scripts
