@@ -63,6 +63,11 @@ app.get('/health', (req, res) => {
 // Serve static files from backend/public
 app.use('/admin', express.static(path.join(__dirname, '../backend/public')));
 
+// Specific route for /admin/import to serve import-admin.html
+app.get('/admin/import', (req, res) => {
+  res.sendFile(path.join(__dirname, '../backend/public/import-admin.html'));
+});
+
 // API Routes
 app.use('/api/ads', adsRoutes);
 app.use('/api/deco', decoRoutes);
