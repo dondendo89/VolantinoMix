@@ -13,11 +13,11 @@
     },
     {
       "src": "/admin/import",
-      "dest": "backend/public/import.html"
+      "dest": "/public/import.html"
     },
     {
       "src": "/admin/(.*\\.(html|js|css|png|jpg|jpeg|gif|svg|ico))",
-      "dest": "backend/public/$1"
+      "dest": "/public/$1"
     },
     {
       "src": "/admin/(.*)",
