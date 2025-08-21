@@ -156,7 +156,7 @@
                 <a href="index.html" class="btn btn-secondary">🏠 Torna al Sito</a>
                 <a href="pdf-viewer.html" class="btn">📄 Gestisci PDF</a>
                 <a href="unified.html" class="btn btn-success">📋 Unifica Volantini</a>
-                <a href="#" id="import-all-btn" class="btn btn-warning">📥 Importa Tutti</a>
+                <button id="import-all-btn" class="btn btn-warning">📥 Importa Tutti</button>
         <a href="#" id="manage-flyers-btn" class="btn btn-warning">🗂️ Gestisci Volantini</a>
             </div>
             
@@ -227,8 +227,13 @@
         const API_BASE = CONFIG.getApiUrl('');
         
         // Setup dynamic links
-        document.getElementById('import-all-btn').href = CONFIG.API_BASE_URL + '/admin/import';
         document.getElementById('manage-flyers-btn').href = CONFIG.API_BASE_URL + '/admin/flyers';
+        
+        // Setup import button click handler
+        document.getElementById('import-all-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            importAllFlyers();
+        });
         
 
         async function checkDecoStatus() {
@@ -356,6 +361,46 @@
                 }
             } catch (err) {
                 alert(`❌ Errore nella pulizia: ${err.message}`);
+            }
+        }
+
+        async function importAllFlyers() {
+            if (!confirm('Sei sicuro di voler importare tutti i volantini? Questa operazione potrebbe richiedere diversi minuti.')) {
+                return;
+            }
+
+            const importBtn = document.getElementById('import-all-btn');
+            const originalText = importBtn.textContent;
+            
+            try {
+                importBtn.textContent = '⏳ Importazione in corso...';
+                importBtn.disabled = true;
+
+                const response = await fetch(`${API_BASE}/import/all`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sources: ['deco', 'eurospin', 'ipercoop', 'mersi'],
+                        skipDuplicates: true,
+                        dryRun: false
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const duration = Math.round(data.duration / 1000);
+                    alert(`✅ Importazione completata!\n\n📊 Risultati:\n• Volantini processati: ${data.totalProcessed}\n• Volantini creati: ${data.totalCreated}\n• Duplicati saltati: ${data.totalDuplicatesSkipped}\n• Errori: ${data.totalErrors}\n\n⏱️ Durata: ${duration} secondi`);
+                } else {
+                    throw new Error(data.error || 'Errore nell\'importazione');
+                }
+            } catch (err) {
+                alert(`❌ Errore nell'importazione: ${err.message}`);
+            } finally {
+                importBtn.textContent = originalText;
+                importBtn.disabled = false;
             }
         }
     </script>
