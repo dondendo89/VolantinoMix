@@ -73,9 +73,9 @@ class VolantiniMergeTest {
         try {
             // Carica volantini da tutte le fonti
             const responses = await Promise.all([
-                fetch('http://localhost:5000/api/volantini/search'),
-                fetch('http://localhost:5000/api/deco'),
-                fetch('http://localhost:5000/api/ipercoop')
+                fetch(CONFIG.getApiUrl(CONFIG.API_ENDPOINTS.VOLANTINI) + '/search'),
+            fetch(CONFIG.getApiUrl(CONFIG.API_ENDPOINTS.DECO)),
+            fetch(CONFIG.getApiUrl(CONFIG.API_ENDPOINTS.IPERCOOP))
             ]);
             
             const [volantiniResp, decoResp, ipercoopResp] = responses;
@@ -173,7 +173,7 @@ class VolantiniMergeTest {
             this.log(`🔗 Chiamata API merge con IDs: ${flyerIds.join(', ')}`);
             
             // Chiama l'API per il merge
-            const response = await fetch('http://localhost:5000/api/pdfs/merge', {
+            const response = await fetch(CONFIG.getApiUrl(CONFIG.API_ENDPOINTS.PDFS) + '/merge', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -225,6 +225,20 @@ class VolantiniMergeTest {
             // Configura il link di download
             this.downloadLink.href = this.testResults.pdfUrl;
             this.downloadLink.download = `test-merge-${Date.now()}.pdf`;
+            
+            // Aggiungi pulsante Flipbook
+            const flipbookBtn = document.createElement('button');
+            flipbookBtn.textContent = '📖 Visualizza Flipbook';
+            flipbookBtn.className = 'btn';
+            flipbookBtn.style.marginLeft = '10px';
+            flipbookBtn.onclick = () => this.openFlipbook();
+            
+            // Aggiungi il pulsante se non esiste già
+            if (!document.getElementById('flipbook-btn')) {
+                flipbookBtn.id = 'flipbook-btn';
+                this.downloadSection.appendChild(flipbookBtn);
+            }
+            
             this.downloadSection.style.display = 'block';
             
             this.log(`✅ PDF pronto per il download: ${this.testResults.pdfUrl}`);
@@ -271,6 +285,18 @@ class VolantiniMergeTest {
             this.updateStepStatus(5, 'error');
             throw new Error(`Step 5 fallito: ${error.message}`);
         }
+    }
+
+    openFlipbook() {
+        if (!this.testResults.pdfUrl) {
+            this.log('❌ Nessun PDF disponibile per il flipbook');
+            return;
+        }
+        
+        const filename = `test-merge-${Date.now()}.pdf`;
+        const flipbookUrl = `flipbook-viewer.html?pdf=${encodeURIComponent(this.testResults.pdfUrl)}&title=${encodeURIComponent(filename)}`;
+        window.open(flipbookUrl, '_blank');
+        this.log('📖 Flipbook aperto in una nuova finestra');
     }
 
     resetTest() {

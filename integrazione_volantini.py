@@ -15,6 +15,7 @@ import time
 from pathlib import Path
 import re
 from scraper_volantini import VolantiniScraper
+from scraper_mersi import MersiVolantiniScraper
 
 class VolantinoMixIntegrator:
     def __init__(self, api_base_url="http://localhost:5000/api", volantini_folder="volantini"):
@@ -320,6 +321,11 @@ def run_complete_workflow():
     
     scraper = VolantiniScraper()
     scraper.scrape_site(max_pages=3)  # Limita a 3 pagine per test
+
+    # Scraping MerSi
+    print("\n📡 FASE: Scraping MerSi Supermercati")
+    mersi_scraper = MersiVolantiniScraper()
+    mersi_scraper.run()
     
     # Fase 2: Integrazione
     print("\n🔗 FASE 2: INTEGRAZIONE CON VOLANTINOMIX")

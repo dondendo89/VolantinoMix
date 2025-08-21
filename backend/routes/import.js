@@ -26,7 +26,7 @@ router.post('/all', [
 ], handleValidationErrors, async (req, res) => {
     try {
         const {
-            sources = ['deco', 'eurospin', 'ipercoop', 'integrazione'],
+            sources = ['deco', 'eurospin', 'ipercoop', 'mersi', 'integrazione'],
             skipDuplicates = true,
             dryRun = false
         } = req.body;
@@ -67,6 +67,11 @@ router.post('/all', [
                 script: 'scraper_ipercoop.py',
                 name: 'Ipercoop Scraper',
                 description: 'Scraping volantini Ipercoop'
+            },
+            mersi: {
+                script: 'scraper_mersi.py',
+                name: 'Mersi Scraper',
+                description: 'Scraping volantini Mersi'
             },
             integrazione: {
                 script: 'integrazione_volantini.py',
@@ -308,6 +313,7 @@ router.post('/source/:sourceName', [
             deco: 'scraper_deco.py',
             eurospin: 'scraper_eurospin.py',
             ipercoop: 'scraper_ipercoop.py',
+            mersi: 'scraper_mersi.py',
             integrazione: 'integrazione_volantini.py'
         };
 

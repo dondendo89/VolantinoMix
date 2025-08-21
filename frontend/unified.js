@@ -87,7 +87,7 @@ class UnifiedPDFViewer {
             }
 
             // Chiamata API come fallback
-            const response = await fetch(`http://localhost:5000/api/pdfs/info/${this.pdfId}`);
+            const response = await fetch(`${CONFIG.getApiUrl(CONFIG.API_ENDPOINTS.PDFS)}/info/${this.pdfId}`);
             
             if (!response.ok) {
                 throw new Error(`Errore HTTP: ${response.status}`);
@@ -204,7 +204,7 @@ class UnifiedPDFViewer {
         
         if (this.pdfData.url) {
             // Use the complete PDF URL (already contains full URL from localStorage)
-            const fullPdfUrl = this.pdfData.url.startsWith('http') ? this.pdfData.url : `http://localhost:5000${this.pdfData.url}`;
+            const fullPdfUrl = CONFIG.getFileUrl(this.pdfData.url);
             
             // Create a button to open PDF in new window instead of iframe
             const pdfContainer = frame.parentElement;
@@ -307,7 +307,7 @@ class UnifiedPDFViewer {
             
             // Trigger download using window.open for better browser compatibility
             const downloadUrl = this.pdfData.downloadUrl || this.pdfData.url;
-            const fullUrl = downloadUrl.startsWith('http') ? downloadUrl : `http://localhost:5000${downloadUrl}`;
+            const fullUrl = CONFIG.getFileUrl(downloadUrl);
             
             // Try multiple download methods for better compatibility
             try {

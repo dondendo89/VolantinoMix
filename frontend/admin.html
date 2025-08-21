@@ -156,7 +156,10 @@
                 <a href="index.html" class="btn btn-secondary">🏠 Torna al Sito</a>
                 <a href="pdf-viewer.html" class="btn">📄 Gestisci PDF</a>
                 <a href="unified.html" class="btn btn-success">📋 Unifica Volantini</a>
+                <a href="#" id="import-all-btn" class="btn btn-warning">📥 Importa Tutti</a>
+        <a href="#" id="manage-flyers-btn" class="btn btn-warning">🗂️ Gestisci Volantini</a>
             </div>
+            
 
             <div class="admin-grid">
                 <div class="admin-card">
@@ -188,6 +191,13 @@
                 </div>
 
                 <div class="admin-card">
+                    <span class="icon">🏪</span>
+                    <h3>Volantini MerSi</h3>
+                    <p>Gestisci e monitora i volantini dei supermercati MerSi. Visualizza statistiche e stato dello scraping.</p>
+                    <button class="btn btn-warning" onclick="checkMersiStatus()">Controlla Stato MerSi</button>
+                </div>
+
+                <div class="admin-card">
                     <span class="icon">📊</span>
                     <h3>Statistiche Sistema</h3>
                     <p>Visualizza statistiche generali del sistema, volantini totali e performance degli endpoint.</p>
@@ -207,12 +217,19 @@
                     <p>Elimina file temporanei, cache e volantini scaduti per liberare spazio su disco.</p>
                     <button class="btn btn-warning" onclick="cleanupSystem()">Pulisci Sistema</button>
                 </div>
+                
             </div>
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script>
-        const API_BASE = 'http://localhost:5000/api';
+        const API_BASE = CONFIG.getApiUrl('');
+        
+        // Setup dynamic links
+        document.getElementById('import-all-btn').href = CONFIG.API_BASE_URL + '/admin/import';
+        document.getElementById('manage-flyers-btn').href = CONFIG.API_BASE_URL + '/admin/flyers';
+        
 
         async function checkDecoStatus() {
             try {
@@ -243,16 +260,26 @@
                     } else {
                         alert(`${statusMessage}\n\n⚠️ Nessun volantino trovato`);
                     }
-                    
-                    // Chiedi se vuole avviare lo scraping
-                    if (data.data.total === 0 && confirm('Nessun volantino Ipercoop trovato. Vuoi avviare lo scraping?')) {
-                        await startIpercoopScraping();
-                    }
                 } else {
                     throw new Error(data.error || 'Errore sconosciuto');
                 }
             } catch (err) {
                 alert(`❌ Errore nel controllo Ipercoop: ${err.message}`);
+            }
+        }
+
+        async function checkMersiStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/mersi/status`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`✅ Stato MerSi:\n\n📊 Volantini totali: ${data.totalFlyers}\n📅 Volantini ultima settimana: ${data.lastWeekFlyers}\n\n🏪 Negozi trovati:\n${Object.keys(data.storeBreakdown).map(store => `• ${store}: ${data.storeBreakdown[store].count} volantini`).join('\n')}`);
+                } else {
+                    throw new Error(data.error || 'Errore sconosciuto');
+                }
+            } catch (err) {
+                alert(`❌ Errore nel controllo MerSi: ${err.message}`);
             }
         }
 

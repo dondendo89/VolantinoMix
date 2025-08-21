@@ -233,7 +233,7 @@ class VolantinoMix {
                 this.log('🏪 Caricamento tutti i volantini (nessun filtro supermercato)');
             }
             
-            const url = `http://localhost:5000/api/volantini/search?${searchParams.toString()}`;
+            const url = `${CONFIG.getApiUrl(CONFIG.API_ENDPOINTS.VOLANTINI)}/search?${searchParams.toString()}`;
             this.log('URL chiamata API:', url);
             
             const response = await fetch(url, {
@@ -624,8 +624,32 @@ class VolantinoMix {
                             <p><strong>Dimensione:</strong> ${result.fileSize}</p>
                             <p><strong>Pagine totali:</strong> ${result.totalPages}</p>
                         </div>
+                        
+                        <!-- Flipbook Viewer Incorporato -->
+                        <div class="embedded-flipbook">
+                            <div class="flipbook-header">
+                                <h3>📖 Visualizzazione Flipbook</h3>
+                            </div>
+                            <div class="flipbook-container">
+                                <div id="embedded-flipbook" class="flipbook-page">
+                                    <div class="flipbook-loading">
+                                        <div class="spinner"></div>
+                                        <p>Caricamento flipbook in corso...</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flipbook-controls">
+                                <button id="prev-page" class="flipbook-btn" disabled>⬅️ Precedente</button>
+                                <span id="page-info" class="page-info">Pagina 1 di ${result.totalPages}</span>
+                                <button id="next-page" class="flipbook-btn">Successiva ➡️</button>
+                            </div>
+                        </div>
+                        
                         <div class="pdf-actions">
-                            <button onclick="window.open('${result.url}', '_blank')" class="btn btn-primary">
+                            <button onclick="volantino.openFlipbook('${result.url}', '${result.filename}')" class="btn btn-secondary">
+                                🔗 Apri in Nuova Finestra
+                            </button>
+                            <button onclick="window.open('${result.url}', '_blank')" class="btn btn-secondary">
                                 📄 Visualizza PDF
                             </button>
                             <button onclick="volantino.downloadPDF('${result.url}', '${result.filename}')" class="btn btn-secondary">
@@ -652,6 +676,11 @@ class VolantinoMix {
                     </div>
                 `;
                 resultDiv.style.display = 'block';
+                
+                // Inizializza il flipbook incorporato
+                setTimeout(() => {
+                    this.initEmbeddedFlipbook(result.url, result.filename);
+                }, 500);
                 
                 // Mostra notifica di successo
                 this.showNotification(
@@ -714,7 +743,7 @@ class VolantinoMix {
             };
             this.log('Body della richiesta:', requestBody);
             
-            const apiUrl = 'http://localhost:5000/api/pdfs/merge';
+            const apiUrl = CONFIG.getApiUrl(CONFIG.API_ENDPOINTS.PDFS) + '/merge';
             this.log('URL API chiamata:', apiUrl);
             
             // Chiama l'API di merge con il parametro corretto
@@ -744,7 +773,7 @@ class VolantinoMix {
                 const responseData = {
                     success: true,
                     pdfId: result.data.filename,
-                    url: `http://localhost:5000${result.data.downloadUrl}`,
+                    url: CONFIG.getFileUrl(result.data.downloadUrl),
                     filename: result.data.filename,
                     fileSize: result.data.fileSizeFormatted || result.data.fileSize,
                     totalPages: result.data.totalPages
@@ -801,7 +830,7 @@ class VolantinoMix {
                     // Se non trovato nei dati locali, recupera dal backend
                     this.log(`Volantino ${id} non trovato nei dati locali, recupero dal backend...`);
                     
-                    const response = await fetch(`http://localhost:5000/api/flyers/${id}`, {
+                    const response = await fetch(`${CONFIG.getApiUrl(CONFIG.API_ENDPOINTS.FLYERS)}/${id}`, {
                         headers: {
                             'X-Request-Source': 'VolantinoMix-Frontend',
                             'X-Request-Type': 'fetch-single-flyer'
@@ -948,6 +977,214 @@ class VolantinoMix {
             });
         } else {
             this.fallbackShare(url, filename);
+        }
+    }
+
+    openFlipbook(pdfUrl, filename) {
+        // Apre il flipbook viewer con il PDF generato
+        const flipbookUrl = `flipbook-viewer.html?pdf=${encodeURIComponent(pdfUrl)}&title=${encodeURIComponent(filename)}`;
+        window.open(flipbookUrl, '_blank');
+        this.log('Flipbook aperto:', { pdfUrl, filename });
+    }
+
+    async initEmbeddedFlipbook(pdfUrl, filename) {
+        try {
+            const flipbookContainer = document.getElementById('embedded-flipbook');
+            if (!flipbookContainer) {
+                this.error('Container flipbook non trovato');
+                return;
+            }
+
+            this.log('🔄 Inizializzazione flipbook incorporato...', { pdfUrl, filename });
+
+            // Carica PDF.js se non già caricato
+            if (typeof pdfjsLib === 'undefined') {
+                await this.loadPDFJS();
+            }
+
+            // Carica il PDF
+            const loadingTask = pdfjsLib.getDocument(pdfUrl);
+            const pdf = await loadingTask.promise;
+            
+            this.embeddedPdf = pdf;
+            this.currentPage = 1;
+            this.totalPages = pdf.numPages;
+
+            // Aggiorna info pagina
+            const pageInfo = document.getElementById('page-info');
+            if (pageInfo) {
+                pageInfo.textContent = `Pagina ${this.currentPage} di ${this.totalPages}`;
+            }
+
+            // Configura controlli
+            this.setupEmbeddedFlipbookControls();
+
+            // Renderizza prima pagina
+            await this.renderEmbeddedPage(this.currentPage);
+
+            this.log('✅ Flipbook incorporato inizializzato con successo');
+
+        } catch (error) {
+            this.error('❌ Errore nell\'inizializzazione del flipbook incorporato:', error);
+            const flipbookContainer = document.getElementById('embedded-flipbook');
+            if (flipbookContainer) {
+                flipbookContainer.innerHTML = `
+                    <div class="flipbook-error">
+                        <p>❌ Errore nel caricamento del flipbook</p>
+                        <button onclick="volantino.openFlipbook('${pdfUrl}', '${filename}')" class="btn btn-primary">
+                            🔗 Apri in Nuova Finestra
+                        </button>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    async loadPDFJS() {
+        return new Promise((resolve, reject) => {
+            if (typeof pdfjsLib !== 'undefined') {
+                resolve();
+                return;
+            }
+
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+            script.onload = () => {
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                resolve();
+            };
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+
+    setupEmbeddedFlipbookControls() {
+        const prevBtn = document.getElementById('prev-page');
+        const nextBtn = document.getElementById('next-page');
+
+        if (prevBtn) {
+            prevBtn.onclick = () => this.goToEmbeddedPage(this.currentPage - 1);
+        }
+        if (nextBtn) {
+            nextBtn.onclick = () => this.goToEmbeddedPage(this.currentPage + 1);
+        }
+
+        // Aggiorna stato pulsanti
+        this.updateEmbeddedControls();
+    }
+
+    updateEmbeddedControls() {
+        const prevBtn = document.getElementById('prev-page');
+        const nextBtn = document.getElementById('next-page');
+        const pageInfo = document.getElementById('page-info');
+
+        if (prevBtn) {
+            prevBtn.disabled = this.currentPage <= 1;
+        }
+        if (nextBtn) {
+            nextBtn.disabled = this.currentPage >= this.totalPages;
+        }
+        if (pageInfo) {
+            pageInfo.textContent = `Pagina ${this.currentPage} di ${this.totalPages}`;
+        }
+    }
+
+    async goToEmbeddedPage(pageNum) {
+        if (pageNum < 1 || pageNum > this.totalPages) return;
+        
+        // Mostra annuncio AdSense ogni 3 pagine (esclusa la prima)
+        if (pageNum > 1 && pageNum % 3 === 0) {
+            this.showAdSenseInterstitial();
+        }
+        
+        this.currentPage = pageNum;
+        await this.renderEmbeddedPage(pageNum);
+        this.updateEmbeddedControls();
+    }
+
+    showAdSenseInterstitial() {
+        // Crea overlay per annuncio interstiziale
+        const adOverlay = document.createElement('div');
+        adOverlay.className = 'adsense-interstitial-overlay';
+        adOverlay.innerHTML = `
+            <div class="adsense-interstitial-content">
+                <div class="adsense-interstitial-header">
+                    <h3>📢 Pubblicità</h3>
+                    <button class="adsense-close-btn" onclick="this.closest('.adsense-interstitial-overlay').remove()">&times;</button>
+                </div>
+                <div class="adsense-ad-container">
+                    <!-- Slot AdSense per annuncio interstiziale -->
+                    <ins class="adsbygoogle"
+                         style="display:block"
+                         data-ad-client="ca-pub-YOUR_PUBLISHER_ID"
+                         data-ad-slot="YOUR_INTERSTITIAL_SLOT_ID"
+                         data-ad-format="auto"
+                         data-full-width-responsive="true"></ins>
+                </div>
+                <div class="adsense-interstitial-footer">
+                    <p>Continua la lettura del flipbook</p>
+                    <button class="btn btn-primary" onclick="this.closest('.adsense-interstitial-overlay').remove()">Continua</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(adOverlay);
+        
+        // Inizializza AdSense per il nuovo annuncio
+        try {
+            (adsbygoogle = window.adsbygoogle || []).push({});
+        } catch (e) {
+            console.log('AdSense non disponibile:', e);
+        }
+        
+        // Rimuovi automaticamente dopo 10 secondi se l'utente non chiude
+        setTimeout(() => {
+            if (adOverlay.parentElement) {
+                adOverlay.remove();
+            }
+        }, 10000);
+    }
+
+    async renderEmbeddedPage(pageNum) {
+        try {
+            const page = await this.embeddedPdf.getPage(pageNum);
+            const viewport = page.getViewport({ scale: 1.0 });
+            
+            // Calcola scala per adattare alla larghezza del container
+            const container = document.getElementById('embedded-flipbook');
+            const containerWidth = container.clientWidth - 40; // padding
+            const scale = Math.min(containerWidth / viewport.width, 1.5);
+            const scaledViewport = page.getViewport({ scale });
+
+            // Crea canvas
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = scaledViewport.height;
+            canvas.width = scaledViewport.width;
+            canvas.style.maxWidth = '100%';
+            canvas.style.height = 'auto';
+            canvas.style.border = '1px solid #ddd';
+            canvas.style.borderRadius = '8px';
+            canvas.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+
+            // Renderizza pagina
+            const renderContext = {
+                canvasContext: context,
+                viewport: scaledViewport
+            };
+
+            await page.render(renderContext).promise;
+
+            // Sostituisci contenuto
+            container.innerHTML = '';
+            container.appendChild(canvas);
+
+        } catch (error) {
+            this.error('Errore nel rendering della pagina:', error);
+            const container = document.getElementById('embedded-flipbook');
+            if (container) {
+                container.innerHTML = '<div class="flipbook-error"><p>❌ Errore nel caricamento della pagina</p></div>';
+            }
         }
     }
 

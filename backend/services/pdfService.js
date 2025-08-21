@@ -230,7 +230,13 @@ class PDFService {
                 // Gestisci percorsi che iniziano con /api/pdfs/download/
                 if (url.startsWith('/api/pdfs/download/')) {
                     const filename = path.basename(url);
-                    localPath = path.join(__dirname, '../public/pdfs', filename);
+                    // Prova prima nella cartella public del progetto principale
+                    localPath = path.join(__dirname, '../../public/pdfs', filename);
+                    
+                    // Se non esiste, prova nella cartella public del backend
+                    if (!await fs.access(localPath).then(() => true).catch(() => false)) {
+                        localPath = path.join(__dirname, '../public/pdfs', filename);
+                    }
                 } else if (url.startsWith('/uploads/') || url.startsWith('uploads/')) {
                     // Se l'URL inizia già con '/uploads/' o 'uploads/', usa il percorso relativo dalla directory backend
                     const cleanUrl = url.startsWith('/') ? url.substring(1) : url;

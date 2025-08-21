@@ -150,13 +150,13 @@ const volantinoSchema = new mongoose.Schema({
         },
         source: {
             type: String,
-            enum: ['manual', 'google_drive', 'api', 'system', 'ipercoop', 'deco', 'eurospin'],
+            enum: ['manual', 'google_drive', 'api', 'system', 'ipercoop', 'deco', 'eurospin', 'mersi'],
             default: 'system'
         }
     },
     source: {
         type: String,
-        enum: ['manual', 'google_drive', 'api', 'system', 'ipercoop', 'deco', 'eurospin'],
+        enum: ['manual', 'google_drive', 'api', 'system', 'ipercoop', 'deco', 'eurospin', 'mersi'],
         default: 'system',
         index: true
     }

@@ -946,8 +946,8 @@ router.get('/admin/all-flyers', async (req, res) => {
             
             allFlyers = allFlyers.concat(mappedUploadFlyers);
             
-            // Recupera volantini da scraper (Eurospin, Decò, Ipercoop)
-            const scraperSources = ['eurospin', 'deco', 'ipercoop'];
+            // Recupera volantini da scraper (Eurospin, Decò, Ipercoop, Mersi) e API
+            const scraperSources = ['eurospin', 'deco', 'ipercoop', 'mersi', 'api'];
             
             for (const source of scraperSources) {
                 try {
@@ -1016,7 +1016,7 @@ router.get('/admin/all-flyers', async (req, res) => {
 router.delete('/admin/delete-flyers', [
     body('flyerIds').isArray({ min: 1 }).withMessage('Deve essere un array di almeno 1 volantino'),
     body('flyerIds.*.id').isString().withMessage('ID volantino non valido'),
-    body('flyerIds.*.source').isIn(['upload', 'eurospin', 'deco', 'ipercoop']).withMessage('Sorgente non valida')
+    body('flyerIds.*.source').isIn(['upload', 'eurospin', 'deco', 'ipercoop', 'mersi', 'api']).withMessage('Sorgente non valida')
 ], handleValidationErrors, async (req, res) => {
     try {
         const { flyerIds } = req.body;
