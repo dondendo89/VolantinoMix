@@ -62,8 +62,16 @@ app.get('/health', (req, res) => {
 
 // Specific route for /admin/import to serve import-admin.html
 app.get('/admin/import', (req, res) => {
-  const filePath = path.resolve(__dirname, '../backend/public/import-admin.html');
-  res.sendFile(filePath);
+  try {
+    const fs = require('fs');
+    const filePath = path.resolve(__dirname, '../backend/public/import-admin.html');
+    const content = fs.readFileSync(filePath, 'utf8');
+    res.setHeader('Content-Type', 'text/html');
+    res.send(content);
+  } catch (error) {
+    console.error('Error serving import-admin.html:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // Serve static files from backend/public
