@@ -60,6 +60,12 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Specific route for /admin/import
+app.get('/admin/import', (req, res) => {
+  const filePath = path.join(__dirname, '../public/import.html');
+  res.sendFile(filePath);
+});
+
 // Serve static files from public for admin routes
 app.use('/admin', express.static(path.join(__dirname, '../public')));
 // Fallback to backend/public for other admin files
