@@ -62,8 +62,13 @@ app.get('/health', (req, res) => {
 
 // Specific route for /admin/import
 app.get('/admin/import', (req, res) => {
-  const filePath = path.join(__dirname, '../public/import.html');
-  res.sendFile(filePath);
+  const filePath = path.resolve(__dirname, '../public/import.html');
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error('Error serving import.html:', err);
+      res.status(500).json({ error: 'File not found', path: filePath });
+    }
+  });
 });
 
 // Serve static files from public for admin routes
