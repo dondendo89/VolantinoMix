@@ -1,6 +1,9 @@
 # Use Node.js 18 LTS
 FROM node:18-alpine
 
+# Install Python for scraper scripts
+RUN apk add --no-cache python3 py3-pip
+
 # Set working directory
 WORKDIR /app
 
@@ -13,11 +16,20 @@ RUN npm install --production
 # Copy source code
 COPY . .
 
-# Create uploads directory (public already exists from COPY)
-RUN mkdir -p uploads
+# Copy Python scraper scripts from parent directory
+COPY ../scraper_*.py ./
+COPY ../requirements.txt ./
+COPY ../integrazione_volantini.py ./
+COPY ../analyze_mersi_pdf.py ./
+
+# Install Python dependencies
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+# Create uploads and temp directories
+RUN mkdir -p uploads /temp
 
 # Set proper permissions
-RUN chown -R node:node /app
+RUN chown -R node:node /app /temp
 USER node
 
 # Expose port
