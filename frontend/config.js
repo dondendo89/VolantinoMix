@@ -13,7 +13,7 @@ const CONFIG = {
         }
         
         // Production fallback - replace with your actual backend URL
-        return 'https://volantinomix-backend.railway.app';
+        return 'https://volantinomix-production.up.railway.app';
     })(),
     
     // API endpoints
