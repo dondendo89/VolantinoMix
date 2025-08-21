@@ -8,15 +8,15 @@ RUN apk add --no-cache python3 py3-pip
 WORKDIR /app
 
 # Copy Python requirements first
-COPY ../requirements.txt ./
+COPY requirements.txt ./
 
 # Install Python dependencies
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Copy Python scraper scripts from parent directory
-COPY ../scraper_*.py ./
-COPY ../integrazione_volantini.py ./
-COPY ../analyze_mersi_pdf.py ./
+# Copy Python scraper scripts
+COPY scraper_*.py ./
+COPY integrazione_volantini.py ./
+COPY analyze_mersi_pdf.py ./
 
 # Copy backend package files
 COPY backend/package*.json ./
