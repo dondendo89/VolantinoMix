@@ -372,9 +372,13 @@
                 // In locale, apri la pagina admin/import del backend
                 window.open('http://localhost:5000/admin/import', '_blank');
                 return;
+            } else {
+                // In produzione, apri la pagina admin/import del backend Railway
+                window.open('https://volantinomix-production.up.railway.app/admin/import', '_blank');
+                return;
             }
             
-            // In produzione, usa l'API
+            // Codice API non più utilizzato (mantenuto per riferimento)
             if (!confirm('Sei sicuro di voler importare tutti i volantini? Questa operazione potrebbe richiedere diversi minuti.')) {
                 return;
             }
