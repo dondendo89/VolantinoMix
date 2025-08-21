@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Importazione Volantini - VolantinoMix</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .import-section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #4facfe;
+            padding-bottom: 10px;
+        }
+
+        .import-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .control-group {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+
+        .control-group h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .checkbox-group {
+            margin-bottom: 20px;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        .source-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .source-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .source-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .source-icon.deco { background: #28a745; }
+        .source-icon.eurospin { background: #ffc107; }
+        .source-icon.ipercoop { background: #dc3545; }
+        .source-icon.integrazione { background: #6f42c1; }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .status-section {
+            margin-top: 40px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+
+        .status-hidden {
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .result-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            text-align: center;
+        }
+
+        .result-card.success {
+            border-left: 4px solid #28a745;
+        }
+
+        .result-card.error {
+            border-left: 4px solid #dc3545;
+        }
+
+        .result-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .result-number.success { color: #28a745; }
+        .result-number.warning { color: #ffc107; }
+        .result-number.error { color: #dc3545; }
+        .result-number.info { color: #17a2b8; }
+
+        .result-label {
+            color: #6c757d;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .log-output {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+            white-space: pre-wrap;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        @media (max-width: 768px) {
+            .import-controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Importazione Volantini</h1>
+            <p>Sistema unificato per l'importazione di tutti i volantini</p>
+        </div>
+
+        <div class="content">
+            <div class="import-section">
+                <h2 class="section-title">Configurazione Importazione</h2>
+                
+                <div class="import-controls">
+                    <div class="control-group">
+                        <h3>📋 Fonti da Importare</h3>
+                        <div class="source-item">
+                            <div class="source-info">
+                                <div class="source-icon deco"></div>
+                                <label>
+                                    <input type="checkbox" id="source-deco" checked>
+                                    Deco Supermercati
+                                </label>
+                            </div>
+                        </div>
+                        <div class="source-item">
+                            <div class="source-info">
+                                <div class="source-icon eurospin"></div>
+                                <label>
+                                    <input type="checkbox" id="source-eurospin" checked>
+                                    Eurospin
+                                </label>
+                            </div>
+                        </div>
+                        <div class="source-item">
+                            <div class="source-info">
+                                <div class="source-icon ipercoop"></div>
+                                <label>
+                                    <input type="checkbox" id="source-ipercoop" checked>
+                                    Ipercoop
+                                </label>
+                            </div>
+                        </div>
+                        <div class="source-item">
+                            <div class="source-info">
+                                <div class="source-icon integrazione"></div>
+                                <label>
+                                    <input type="checkbox" id="source-integrazione" checked>
+                                    Integrazione Locale
+                                </label>
+                            </div>
+                        </div>
+                        <div class="source-item">
+                            <div class="source-info">
+                                <div class="source-icon mersi"></div>
+                                <label>
+                                    <input type="checkbox" id="source-mersi" checked>
+                                    Mersi Supermercati
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>⚙️ Opzioni</h3>
+                        <div class="checkbox-group">
+                            <label>
+                                <input type="checkbox" id="skip-duplicates" checked>
+                                Salta duplicati automaticamente
+                            </label>
+                            <label>
+                                <input type="checkbox" id="dry-run">
+                                Modalità test (non importa realmente)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="start-import">
+                        🚀 Avvia Importazione Completa
+                    </button>
+                    <button class="btn btn-secondary" id="check-status">
+                        📊 Controlla Stato Script
+                    </button>
+                </div>
+            </div>
+
+            <div class="status-section status-hidden" id="status-section">
+                <h2 class="section-title">📊 Stato Importazione</h2>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div id="status-message">Preparazione importazione...</div>
+                
+                <div class="results-grid" id="results-grid"></div>
+                
+                <div class="log-output" id="log-output" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let importInProgress = false;
+
+        // Elementi DOM
+        const startImportBtn = document.getElementById('start-import');
+        const checkStatusBtn = document.getElementById('check-status');
+        const statusSection = document.getElementById('status-section');
+        const statusMessage = document.getElementById('status-message');
+        const progressFill = document.getElementById('progress-fill');
+        const resultsGrid = document.getElementById('results-grid');
+        const logOutput = document.getElementById('log-output');
+
+        // Event listeners
+        startImportBtn.addEventListener('click', startImport);
+        checkStatusBtn.addEventListener('click', checkScriptStatus);
+
+        // Funzione per ottenere le fonti selezionate
+        function getSelectedSources() {
+            const sources = [];
+            if (document.getElementById('source-deco').checked) sources.push('deco');
+            if (document.getElementById('source-eurospin').checked) sources.push('eurospin');
+            if (document.getElementById('source-ipercoop').checked) sources.push('ipercoop');
+            if (document.getElementById('source-integrazione').checked) sources.push('integrazione');
+            if (document.getElementById('source-mersi').checked) sources.push('mersi');
+            return sources;
+        }
+
+        // Funzione per ottenere le opzioni
+        function getOptions() {
+            return {
+                skipDuplicates: document.getElementById('skip-duplicates').checked,
+                dryRun: document.getElementById('dry-run').checked
+            };
+        }
+
+        // Funzione per mostrare la sezione stato
+        function showStatus() {
+            statusSection.classList.remove('status-hidden');
+            statusSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Funzione per aggiornare il progresso
+        function updateProgress(percentage) {
+            progressFill.style.width = percentage + '%';
+        }
+
+        // Funzione per aggiornare il messaggio di stato
+        function updateStatusMessage(message, type = 'info') {
+            statusMessage.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+        }
+
+        // Funzione per creare una card risultato
+        function createResultCard(title, value, type = 'info') {
+            return `
+                <div class="result-card ${type}">
+                    <div class="result-number ${type}">${value}</div>
+                    <div class="result-label">${title}</div>
+                </div>
+            `;
+        }
+
+        // Funzione per avviare l'importazione
+        async function startImport() {
+            if (importInProgress) return;
+
+            const sources = getSelectedSources();
+            if (sources.length === 0) {
+                alert('Seleziona almeno una fonte da importare!');
+                return;
+            }
+
+            const options = getOptions();
+            
+            importInProgress = true;
+            startImportBtn.disabled = true;
+            startImportBtn.textContent = '⏳ Importazione in corso...';
+            
+            showStatus();
+            updateProgress(0);
+            updateStatusMessage('🚀 Avvio importazione completa...', 'info');
+            resultsGrid.innerHTML = '';
+            logOutput.style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_BASE}/import/all`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sources: sources,
+                        skipDuplicates: options.skipDuplicates,
+                        dryRun: options.dryRun
+                    })
+                });
+
+                const result = await response.json();
+                
+                updateProgress(100);
+                
+                if (result.success) {
+                    updateStatusMessage(
+                        `✅ Importazione completata con successo!<br>
+                        ⏱️ Durata: ${result.duration} secondi<br>
+                        📁 Fonti processate: ${Object.keys(result.sources).length}`,
+                        'success'
+                    );
+                } else {
+                    updateStatusMessage(
+                        `⚠️ Importazione completata con alcuni errori.<br>
+                        ❌ Errori totali: ${result.totalErrors}`,
+                        'warning'
+                    );
+                }
+
+                // Mostra risultati
+                displayResults(result);
+                
+            } catch (error) {
+                console.error('Errore durante l\'importazione:', error);
+                updateProgress(0);
+                updateStatusMessage(
+                    `❌ Errore durante l'importazione: ${error.message}`,
+                    'error'
+                );
+            } finally {
+                importInProgress = false;
+                startImportBtn.disabled = false;
+                startImportBtn.textContent = '🚀 Avvia Importazione Completa';
+            }
+        }
+
+        // Funzione per mostrare i risultati
+        function displayResults(result) {
+            let html = '';
+            
+            // Risultati generali
+            html += createResultCard('Processati', result.totalProcessed, 'info');
+            html += createResultCard('Creati', result.totalCreated, 'success');
+            html += createResultCard('Duplicati Saltati', result.totalDuplicatesSkipped, 'warning');
+            html += createResultCard('Errori', result.totalErrors, result.totalErrors > 0 ? 'error' : 'success');
+            
+            resultsGrid.innerHTML = html;
+            
+            // Dettagli per fonte
+            if (result.sources && Object.keys(result.sources).length > 0) {
+                let logText = 'DETTAGLI PER FONTE:\n\n';
+                
+                Object.entries(result.sources).forEach(([source, stats]) => {
+                    const status = stats.success ? '✅' : '❌';
+                    logText += `${status} ${source.toUpperCase()}:\n`;
+                    logText += `   Processati: ${stats.processed}\n`;
+                    logText += `   Creati: ${stats.created}\n`;
+                    logText += `   Duplicati: ${stats.duplicatesSkipped}\n`;
+                    logText += `   Errori: ${stats.errors}\n`;
+                    if (stats.error) {
+                        logText += `   Errore: ${stats.error}\n`;
+                    }
+                    logText += '\n';
+                });
+                
+                logOutput.textContent = logText;
+                logOutput.style.display = 'block';
+            }
+        }
+
+        // Funzione per controllare lo stato degli script
+        async function checkScriptStatus() {
+            try {
+                showStatus();
+                updateStatusMessage('🔍 Controllo stato script...', 'info');
+                
+                const response = await fetch(`${API_BASE}/import/status`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    let statusText = 'STATO SCRIPT:\n\n';
+                    
+                    Object.entries(result.scripts).forEach(([script, info]) => {
+                        const status = info.exists ? '✅' : '❌';
+                        statusText += `${status} ${script}: ${info.exists ? 'Disponibile' : 'Non trovato'}\n`;
+                        statusText += `   Path: ${info.path}\n\n`;
+                    });
+                    
+                    logOutput.textContent = statusText;
+                    logOutput.style.display = 'block';
+                    
+                    updateStatusMessage('✅ Controllo stato completato', 'success');
+                } else {
+                    updateStatusMessage(`❌ Errore nel controllo stato: ${result.message}`, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Errore nel controllo stato:', error);
+                updateStatusMessage(`❌ Errore nel controllo stato: ${error.message}`, 'error');
+            }
+        }
+
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Interfaccia importazione volantini caricata');
+        });
+    </script>
+</body>
+</html>
