@@ -29,7 +29,7 @@ app.set('trust proxy', 1);
 app.use(compression());
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://volantino-mix.vercel.app', 'https://www.volantino-mix.vercel.app']
+    ? ['https://volantinomix.vercel.app', 'https://www.volantinomix.vercel.app']
     : ['http://localhost:3000', 'http://localhost:5000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
