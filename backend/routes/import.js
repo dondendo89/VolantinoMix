@@ -285,6 +285,11 @@ router.get('/status', async (req, res) => {
                 NODE_ENV: process.env.NODE_ENV,
                 __dirname: __dirname,
                 cwd: process.cwd()
+            },
+            debug: {
+                __dirname,
+                isLocal,
+                condition: `__dirname.includes('/Users/') || __dirname.includes('/home/')`
             }
         };
 
