@@ -60,7 +60,9 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Serve static files from backend/public
+// Serve static files from public for admin routes
+app.use('/admin', express.static(path.join(__dirname, '../public')));
+// Fallback to backend/public for other admin files
 app.use('/admin', express.static(path.join(__dirname, '../backend/public')));
 
 // API Routes
