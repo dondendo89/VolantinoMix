@@ -21,7 +21,7 @@ COPY package*.json ./
 RUN npm ci --only=production
 
 # Copy Python requirements
-COPY ../requirements.txt ./requirements.txt
+COPY requirements.txt ./requirements.txt
 
 # Install Python dependencies
 RUN pip3 install --no-cache-dir -r requirements.txt
