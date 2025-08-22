@@ -224,45 +224,58 @@ class PDFService {
      */
     async loadPDFFromUrl(url) {
         try {
-            // Se è un percorso locale
+            // Se è un percorso relativo, convertilo in URL completo
             if (!url.startsWith('http')) {
-                let localPath;
-                
-                // Gestisci percorsi che iniziano con /api/pdfs/download/
-                if (url.startsWith('/api/pdfs/download/')) {
-                    const filename = path.basename(url);
-                    // Prova prima nella cartella public del progetto principale
-                    localPath = path.join(__dirname, '../../public/pdfs', filename);
-                    
-                    // Se non esiste, prova nella cartella public del backend
-                    if (!await fs.access(localPath).then(() => true).catch(() => false)) {
-                        localPath = path.join(__dirname, '../public/pdfs', filename);
+                // In produzione su Render, converti i percorsi relativi in URL completi
+                if (process.env.NODE_ENV === 'production') {
+                    if (url.startsWith('/api/pdfs/download/') || url.startsWith('/uploads/')) {
+                        const baseUrl = process.env.BASE_URL || 'https://volantinomix.onrender.com';
+                        url = baseUrl + url;
+                    } else {
+                        // Per altri percorsi relativi, prova a costruire l'URL
+                        const baseUrl = process.env.BASE_URL || 'https://volantinomix.onrender.com';
+                        url = baseUrl + '/api/pdfs/download/' + path.basename(url);
                     }
-                } else if (url.startsWith('/uploads/') || url.startsWith('uploads/')) {
-                    // Se l'URL inizia già con '/uploads/' o 'uploads/', usa il percorso relativo dalla directory backend
-                    const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
-                    localPath = path.join(__dirname, '..', cleanUrl);
                 } else {
-                    // Altrimenti, aggiungi il prefisso uploads
-                    localPath = path.join(__dirname, '../uploads', url);
-                }
-                
-                // Prova a caricare il file dal percorso principale
-                try {
-                    const pdfBytes = await fs.readFile(localPath);
-                    return await PDFDocument.load(pdfBytes);
-                } catch (error) {
-                    // Se non trovato, prova nelle cartelle specifiche degli scraper
-                    const filename = path.basename(url);
+                    // In sviluppo locale, mantieni la logica esistente per i file locali
+                    let localPath;
                     
-                    // Prova nella cartella volantini_deco per i volantini Decò
-                    const decoPath = path.join(__dirname, '../../volantini_deco', filename);
+                    // Gestisci percorsi che iniziano con /api/pdfs/download/
+                    if (url.startsWith('/api/pdfs/download/')) {
+                        const filename = path.basename(url);
+                        // Prova prima nella cartella public del progetto principale
+                        localPath = path.join(__dirname, '../../public/pdfs', filename);
+                        
+                        // Se non esiste, prova nella cartella public del backend
+                        if (!await fs.access(localPath).then(() => true).catch(() => false)) {
+                            localPath = path.join(__dirname, '../public/pdfs', filename);
+                        }
+                    } else if (url.startsWith('/uploads/') || url.startsWith('uploads/')) {
+                        // Se l'URL inizia già con '/uploads/' o 'uploads/', usa il percorso relativo dalla directory backend
+                        const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
+                        localPath = path.join(__dirname, '..', cleanUrl);
+                    } else {
+                        // Altrimenti, aggiungi il prefisso uploads
+                        localPath = path.join(__dirname, '../uploads', url);
+                    }
+                    
+                    // Prova a caricare il file dal percorso principale
                     try {
-                        const pdfBytes = await fs.readFile(decoPath);
+                        const pdfBytes = await fs.readFile(localPath);
                         return await PDFDocument.load(pdfBytes);
-                    } catch (decoError) {
-                        // Se non trovato neanche lì, rilancia l'errore originale
-                        throw error;
+                    } catch (error) {
+                        // Se non trovato, prova nelle cartelle specifiche degli scraper
+                        const filename = path.basename(url);
+                        
+                        // Prova nella cartella volantini_deco per i volantini Decò
+                        const decoPath = path.join(__dirname, '../../volantini_deco', filename);
+                        try {
+                            const pdfBytes = await fs.readFile(decoPath);
+                            return await PDFDocument.load(pdfBytes);
+                        } catch (decoError) {
+                            // Se non trovato neanche lì, rilancia l'errore originale
+                            throw error;
+                        }
                     }
                 }
             }
@@ -291,23 +304,32 @@ class PDFService {
      */
     async loadPDFFromVolantino(volantino) {
         try {
-            // In produzione su Render, salta i percorsi locali assoluti
-            if (volantino.pdfPath && process.env.NODE_ENV !== 'production') {
-                try {
-                    const pdfBytes = await fs.readFile(volantino.pdfPath);
-                    return await PDFDocument.load(pdfBytes);
-                } catch (pathError) {
-                    console.warn(`Percorso locale non accessibile: ${volantino.pdfPath}, provo con pdfUrl`);
+            // In produzione su Render, usa sempre pdfUrl e ignora pdfPath
+            if (process.env.NODE_ENV === 'production') {
+                if (volantino.pdfUrl) {
+                    console.log(`Ambiente produzione: caricando PDF da pdfUrl: ${volantino.pdfUrl}`);
+                    return await this.loadPDFFromUrl(volantino.pdfUrl);
+                } else {
+                    throw new Error('Nessun pdfUrl disponibile per il volantino in produzione');
                 }
             }
             
-            // Usa pdfUrl come fallback o metodo principale in produzione
+            // In sviluppo locale, prova prima con pdfPath se disponibile
+            if (volantino.pdfPath) {
+                try {
+                    const pdfBytes = await fs.readFile(volantino.pdfPath);
+                    return await PDFDocument.load(pdfBytes);
+                } catch (error) {
+                    console.log(`Errore nel caricamento da pdfPath ${volantino.pdfPath}:`, error.message);
+                }
+            }
+            
+            // Se pdfPath non funziona o non è disponibile, prova con pdfUrl
             if (volantino.pdfUrl) {
                 return await this.loadPDFFromUrl(volantino.pdfUrl);
             }
             
-            throw new Error('Nessun percorso PDF valido trovato nel volantino');
-            
+            throw new Error('Nessun percorso PDF valido trovato per il volantino');
         } catch (error) {
             console.error(`Errore nel caricamento del volantino ${volantino._id}:`, error);
             throw error;
