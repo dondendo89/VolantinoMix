@@ -291,13 +291,17 @@ class PDFService {
      */
     async loadPDFFromVolantino(volantino) {
         try {
-            // Prova prima con pdfPath se disponibile
-            if (volantino.pdfPath) {
-                const pdfBytes = await fs.readFile(volantino.pdfPath);
-                return await PDFDocument.load(pdfBytes);
+            // In produzione su Render, salta i percorsi locali assoluti
+            if (volantino.pdfPath && process.env.NODE_ENV !== 'production') {
+                try {
+                    const pdfBytes = await fs.readFile(volantino.pdfPath);
+                    return await PDFDocument.load(pdfBytes);
+                } catch (pathError) {
+                    console.warn(`Percorso locale non accessibile: ${volantino.pdfPath}, provo con pdfUrl`);
+                }
             }
             
-            // Altrimenti usa pdfUrl
+            // Usa pdfUrl come fallback o metodo principale in produzione
             if (volantino.pdfUrl) {
                 return await this.loadPDFFromUrl(volantino.pdfUrl);
             }
