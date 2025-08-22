@@ -18,7 +18,11 @@ from scraper_volantini import VolantiniScraper
 from scraper_mersi import MersiVolantiniScraper
 
 class VolantinoMixIntegrator:
-    def __init__(self, api_base_url="http://localhost:5000/api", volantini_folder="volantini"):
+    def __init__(self, api_base_url=None, volantini_folder="volantini"):
+        # Auto-detect API URL based on environment
+        if api_base_url is None:
+            port = os.environ.get('PORT', '3000')
+            api_base_url = f'http://localhost:{port}/api'
         self.api_base_url = api_base_url
         self.volantini_folder = volantini_folder
         self.session = requests.Session()

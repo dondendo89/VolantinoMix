@@ -20,7 +20,11 @@ import re
 from datetime import datetime
 
 class DecoVolantiniScraper:
-    def __init__(self, download_folder="volantini_deco", api_base_url="http://localhost:5000/api"):
+    def __init__(self, download_folder="volantini_deco", api_base_url=None):
+        # Auto-detect API URL based on environment
+        if api_base_url is None:
+            port = os.environ.get('PORT', '3000')
+            api_base_url = f'http://localhost:{port}/api'
         self.base_url = "https://supermercatideco.gruppoarena.it"
         self.volantini_url = "https://supermercatideco.gruppoarena.it/volantini/"
         self.download_folder = Path(download_folder)
@@ -335,7 +339,10 @@ def main():
     
     parser = argparse.ArgumentParser(description='Scraper Supermercati Decò per VolantinoMix')
     parser.add_argument('--folder', default='volantini_deco', help='Cartella di download (default: volantini_deco)')
-    parser.add_argument('--api', default='http://localhost:5000/api', help='URL API VolantinoMix')
+    # Auto-detect API URL based on environment
+    default_port = os.environ.get('PORT', '3000')
+    default_api = f'http://localhost:{default_port}/api'
+    parser.add_argument('--api', default=default_api, help='URL API VolantinoMix')
     parser.add_argument('--no-upload', action='store_true', help='Solo download, senza upload')
     
     args = parser.parse_args()

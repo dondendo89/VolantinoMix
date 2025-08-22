@@ -26,7 +26,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class EurospinScraper:
-    def __init__(self, api_base_url="http://localhost:5000/api"):
+    def __init__(self, api_base_url=None):
+        # Auto-detect API URL based on environment
+        if api_base_url is None:
+            port = os.environ.get('PORT', '3000')
+            api_base_url = f'http://localhost:{port}/api'
         self.base_url = "https://www.eurospin.it"
         self.api_base_url = api_base_url
         # URL alternativi per cercare volantini

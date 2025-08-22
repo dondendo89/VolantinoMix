@@ -5,7 +5,12 @@ import re
 import datetime
 
 class MersiVolantiniScraper:
-    def __init__(self, base_url='https://www.mersisupermercati.com/volantino/', upload_url='http://localhost:5000/api/pdfs/upload', download_dir='volantini/mersi'):
+    def __init__(self, base_url='https://www.mersisupermercati.com/volantino/', upload_url=None, download_dir='volantini/mersi'):
+        # Auto-detect API URL based on environment
+        if upload_url is None:
+            # In production (Render), use the same host with PORT env var
+            port = os.environ.get('PORT', '3000')
+            upload_url = f'http://localhost:{port}/api/pdfs/upload'
         self.base_url = base_url
         self.upload_url = upload_url
         self.download_dir = download_dir
