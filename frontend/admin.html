@@ -355,7 +355,7 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    alert(`✅ Pulizia completata!\n\n🗑️ File eliminati: ${data.deletedFiles}\n💾 Spazio liberato: ${data.freedSpace}`);
+                    alert(`✅ Pulizia completata!\n\n🗑️ File eliminati: ${data.data.deletedFiles}\n⏰ Età massima: ${data.data.maxAge}`);
                 } else {
                     throw new Error(data.error || 'Errore nella pulizia');
                 }
