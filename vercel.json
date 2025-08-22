@@ -3,11 +3,15 @@
   "rewrites": [
     {
       "source": "/health",
-      "destination": "/api/index"
+      "destination": "/api"
     },
     {
       "source": "/admin/(.*)",
-      "destination": "/api/index"
+      "destination": "/api"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api"
     },
     {
       "source": "/(.*)",

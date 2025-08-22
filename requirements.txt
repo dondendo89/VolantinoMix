@@ -7,7 +7,7 @@ beautifulsoup4>=4.11.0
 lxml>=4.9.0
 
 # Utilità
-pathliblib>=1.0.0  # Per gestione path (già incluso in Python 3.4+)
+# pathlib è già incluso nella libreria standard di Python 3.4+
 
 # Optional: per parsing HTML più veloce
 html5lib>=1.1

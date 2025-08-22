@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VolantinoMix - Trova e Unisci Volantini nella Tua Zona</title>
+    <meta name="description" content="Trova volantini promozionali nella tua zona, selezionali e uniscili in un unico PDF. Scarica, condividi via WhatsApp ed Email.">
+    <meta name="keywords" content="volantini, offerte, promozioni, PDF, CAP, geolocalizzazione, shopping">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXX" crossorigin="anonymous"></script>
+    
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "VolantinoMix",
+        "description": "Trova e unisci volantini promozionali nella tua zona",
+        "url": "https://volantinoMix.com",
+        "applicationCategory": "Shopping",
+        "operatingSystem": "Web Browser"
+    }
+    </script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="nav">
+                <div class="logo">
+                    <h1>VolantinoMix</h1>
+                </div>
+                <nav class="nav-menu">
+                    <a href="#" class="nav-link active">Home</a>
+                    <a href="#" class="nav-link">Categorie</a>
+                    <a href="#" class="nav-link">Preferiti</a>
+                    <a href="pdf-viewer.html" class="nav-link" title="Visualizza PDF">📄 PDF</a>
+                    <a href="flipbook-viewer.html" class="nav-link" title="Visualizzatore Flipbook">📖 Flipbook</a>
+                    <a href="#" class="nav-link">Login</a>
+                    <button id="notification-btn" class="notification-btn" title="Attiva notifiche">
+                        🔔
+                    </button>
+                </nav>
+                <div class="mobile-menu-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Banner AdSense Responsive Top -->
+            <div class="ad-banner ad-banner-top">
+                <!-- Google AdSense Banner Top -->
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-XXXXXXXXXX"
+                     data-ad-slot="XXXXXXXXXX"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>
+                     (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
+            </div>
+
+            <!-- Hero Section -->
+            <section class="hero">
+                <h2>Trova e Unisci i Volantini dei Tuoi Supermercati Preferiti</h2>
+                <p>Seleziona i volantini che ti interessano e crea un unico PDF personalizzato</p>
+                
+                <!-- Search Section -->
+                <div class="search-section">
+                    <div class="search-input-group">
+                        <input type="text" id="store-search" class="search-input" placeholder="Cerca per nome supermercato (es. Coop, Esselunga...)" />
+                        <button id="search-btn" class="search-btn">Cerca Volantini</button>
+                        <button id="clear-search-btn" class="clear-btn">Mostra Tutti</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Loading Spinner -->
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Caricamento volantini...</p>
+            </div>
+
+            <!-- Volantini Grid -->
+            <section class="volantini-section">
+                <div class="section-header">
+                    <h3>Volantini Disponibili</h3>
+                    <div class="selected-count">
+                        <span id="selected-count">0</span> volantini selezionati
+                    </div>
+                </div>
+                
+                <!-- Banner AdSense tra le card -->
+                <div class="ad-banner ad-banner-middle">
+                    <!-- Google AdSense Medium Rectangle -->
+                    <ins class="adsbygoogle"
+                         style="display:block"
+                         data-ad-client="ca-pub-XXXXXXXXXX"
+                         data-ad-slot="XXXXXXXXXX"
+                         data-ad-format="rectangle"></ins>
+                    <script>
+                         (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
+                </div>
+                
+
+
+                <div id="volantini-grid" class="volantini-grid">
+                    <!-- Volantini cards will be populated here -->
+                </div>
+
+                <!-- Generate Button -->
+                <div class="generate-section">
+                    <button id="generate-btn" class="generate-btn disabled" disabled>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <polyline points="14,2 14,8 20,8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <polyline points="10,9 9,9 8,9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Genera Volantino Unico
+                    </button>
+                </div>
+                
+                <!-- PDF Result Section -->
+                <div id="pdf-result" class="pdf-result" style="display: none;">
+                    <!-- Il risultato della generazione del PDF verrà mostrato qui -->
+                </div>
+            </section>
+            
+            <!-- Banner AdSense Bottom -->
+            <div class="ad-banner ad-banner-bottom">
+                <!-- Google AdSense Banner Bottom -->
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-XXXXXXXXXX"
+                     data-ad-slot="XXXXXXXXXX"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>
+                     (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
+            </div>
+            
+            <!-- Sidebar AdSense per Desktop -->
+            <div class="ad-sidebar" id="adSidebar">
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-XXXXXXXXXX"
+                     data-ad-slot="XXXXXXXXXX"
+                     data-ad-format="vertical"></ins>
+                <script>
+                     (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 VolantinoMix. Tutti i diritti riservati.</p>
+        </div>
+    </footer>
+
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+    <script>
+        (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+</body>
+</html>

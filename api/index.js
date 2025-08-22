@@ -29,7 +29,7 @@ app.set('trust proxy', 1);
 app.use(compression());
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://volantino-mix.vercel.app', 'https://www.volantino-mix.vercel.app']
+    ? ['https://volantino-mix.vercel.app', 'https://www.volantino-mix.vercel.app', 'https://volantinomix-production-d308.up.railway.app']
     : ['http://localhost:3000', 'http://localhost:5000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -60,25 +60,49 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Specific route for /admin/import
-app.get('/admin/import', (req, res) => {
-  const fs = require('fs');
-  const filePath = path.resolve(__dirname, '../backend/public/import-admin.html');
-  
-  try {
-    const htmlContent = fs.readFileSync(filePath, 'utf8');
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(htmlContent);
-  } catch (err) {
-    console.error('Error reading import-admin.html:', err);
-    res.status(500).json({ error: 'File not found', path: filePath, message: err.message });
-  }
+// Admin routes - specific routes first
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, '../backend/public/admin.html'));
 });
 
-// Serve static files from public for admin routes
-app.use('/admin', express.static(path.join(__dirname, '../public')));
-// Fallback to backend/public for other admin files
+app.get('/admin/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../backend/public/admin.html'));
+});
+
+app.get('/admin/import', (req, res) => {
+  res.sendFile(path.join(__dirname, '../backend/public/import-admin.html'));
+});
+
+app.get('/admin/flyer', (req, res) => {
+  res.sendFile(path.join(__dirname, '../backend/public/flyer-admin.html'));
+});
+
+// Serve static files for admin assets (CSS, JS, etc.)
 app.use('/admin', express.static(path.join(__dirname, '../backend/public')));
+
+// Serve frontend static files from backend/public
+app.use(express.static(path.join(__dirname, '../backend/public')));
+
+// Handle frontend routes
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../backend/public/index.html'));
+});
+
+app.get('/flipbook-viewer', (req, res) => {
+  res.sendFile(path.join(__dirname, '../backend/public/flipbook-viewer.html'));
+});
+
+app.get('/pdf-viewer', (req, res) => {
+  res.sendFile(path.join(__dirname, '../backend/public/pdf-viewer.html'));
+});
+
+app.get('/test-merge', (req, res) => {
+  res.sendFile(path.join(__dirname, '../backend/public/test-merge.html'));
+});
+
+app.get('/unified', (req, res) => {
+  res.sendFile(path.join(__dirname, '../backend/public/unified.html'));
+});
 
 // API Routes
 app.use('/api/ads', adsRoutes);
@@ -106,4 +130,11 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
+// Start server for Railway
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+// Export for compatibility
 module.exports = app;

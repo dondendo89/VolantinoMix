@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Unitario - Merge PDF Volantini</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-header {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .test-step {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            background-color: #f8f9fa;
+        }
+        .test-step.success {
+            border-left-color: #28a745;
+            background-color: #d4edda;
+        }
+        .test-step.error {
+            border-left-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        .test-step.running {
+            border-left-color: #ffc107;
+            background-color: #fff3cd;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status {
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .download-link {
+            display: inline-block;
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .download-link:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <h1>🧪 Test Unitario - Merge PDF Volantini</h1>
+            <p>Test automatico per verificare il funzionamento del merge tra volantini Coop e Deco</p>
+        </div>
+
+        <div class="test-controls">
+            <button id="start-test" class="btn">▶️ Avvia Test Automatico</button>
+            <button id="reset-test" class="btn" style="background-color: #6c757d;">🔄 Reset Test</button>
+        </div>
+
+        <div class="status" id="test-status">Pronto per iniziare il test</div>
+
+        <div class="test-step" id="step-1">
+            <h3>📋 Step 1: Caricamento Volantini</h3>
+            <p>Caricamento dei volantini disponibili dal backend...</p>
+        </div>
+
+        <div class="test-step" id="step-2">
+            <h3>🎯 Step 2: Selezione Automatica</h3>
+            <p>Selezione automatica di un volantino Coop e uno Deco...</p>
+        </div>
+
+        <div class="test-step" id="step-3">
+            <h3>🔄 Step 3: Merge PDF</h3>
+            <p>Esecuzione del merge dei volantini selezionati...</p>
+        </div>
+
+        <div class="test-step" id="step-4">
+            <h3>⬇️ Step 4: Download PDF</h3>
+            <p>Download automatico del PDF generato...</p>
+        </div>
+
+        <div class="test-step" id="step-5">
+            <h3>✅ Step 5: Verifica Risultato</h3>
+            <p>Verifica che il PDF sia stato generato correttamente...</p>
+        </div>
+
+        <div class="log" id="test-log">Log del test:
+</div>
+
+        <div id="download-section" style="display: none;">
+            <h3>📄 PDF Generato</h3>
+            <a id="download-link" class="download-link" href="#" download>⬇️ Scarica PDF Generato</a>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="test-merge.js"></script>
+</body>
+</html>

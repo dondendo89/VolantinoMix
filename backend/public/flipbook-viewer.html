@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizzatore Flipbook - VolantinoMix</title>
+    
+    <!-- Turn.js CSS -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            background: #f8f9fa;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .flipbook-container {
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 600px;
+            position: relative;
+        }
+
+        #flipbook {
+            width: 800px;
+            height: 600px;
+            margin: 0 auto;
+        }
+
+        .page {
+            width: 400px;
+            height: 600px;
+            background: white;
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .page-number {
+            position: absolute;
+            bottom: 10px;
+            right: 15px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #6c757d;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px;
+            text-align: center;
+        }
+
+
+
+        /* AdSense container styles */
+        .ad-container {
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .ad-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ad-modal {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            text-align: center;
+            position: relative;
+        }
+
+        .ad-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            #flipbook {
+                width: 600px;
+                height: 450px;
+            }
+            
+            .page {
+                width: 300px;
+                height: 450px;
+            }
+            
+            .ad-container {
+                position: static;
+                margin: 20px auto;
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📖 Visualizzatore Flipbook</h1>
+            <p>Sfoglia i volantini come un vero libro</p>
+        </div>
+
+
+
+        <div class="controls">
+            <button class="btn" id="prevBtn" onclick="previousPage()" disabled>
+                ⬅️ Pagina Precedente
+            </button>
+            <button class="btn" id="nextBtn" onclick="nextPage()" disabled>
+                Pagina Successiva ➡️
+            </button>
+            <button class="btn" onclick="zoomIn()">
+                🔍 Zoom +
+            </button>
+            <button class="btn" onclick="zoomOut()">
+                🔍 Zoom -
+            </button>
+            <button class="btn" onclick="toggleFullscreen()">
+                🖥️ Schermo Intero
+            </button>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <p>🔄 Caricamento flipbook in corso...</p>
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div class="flipbook-container">
+            <div id="flipbook"></div>
+        </div>
+    </div>
+
+    <!-- AdSense Container -->
+    <div class="ad-container" id="adContainer" style="display: none;">
+        <!-- AdSense Banner 300x250 -->
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-XXXXXXXXXX"
+             data-ad-slot="YYYYYYYYYY"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+    </div>
+
+    <!-- Ad Overlay Modal -->
+    <div class="ad-overlay" id="adOverlay">
+        <div class="ad-modal">
+            <button class="ad-close" onclick="closeAdModal()">&times;</button>
+            <h3>📢 Pubblicità</h3>
+            <div id="interstitialAd">
+                <!-- AdSense Large Rectangle 336x280 -->
+                <ins class="adsbygoogle"
+                     style="display:inline-block;width:336px;height:280px"
+                     data-ad-client="ca-pub-XXXXXXXXXX"
+                     data-ad-slot="ZZZZZZZZZZ"></ins>
+            </div>
+            <button class="btn" onclick="closeAdModal()">Continua a leggere</button>
+        </div>
+    </div>
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXX" crossorigin="anonymous"></script>
+    
+    <!-- PDF.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    
+    <!-- Turn.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/3/turn.min.js"></script>
+    
+    <script src="config.js"></script>
+    <script>
+        const API_BASE = CONFIG.getApiUrl('');
+        let currentPDF = null;
+        let currentPages = [];
+        let pageCount = 0;
+        let adCounter = 0;
+        let zoomLevel = 1;
+
+        // Initialize on page load
+        $(document).ready(function() {
+            checkURLParameters();
+            initializeAdSense();
+        });
+
+        function checkURLParameters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const pdfUrl = urlParams.get('pdf');
+            const title = urlParams.get('title');
+            
+            if (pdfUrl) {
+                // Update header with title
+                if (title) {
+                    document.querySelector('.header h1').textContent = `📖 ${title}`;
+                }
+                
+                // Load PDF directly
+                loadPDFFromURL(pdfUrl, title || 'PDF Generato');
+            } else {
+                // Show error if no PDF is specified
+                showError('Nessun PDF specificato. Accedi al flipbook tramite il pulsante "Visualizza Flipbook" dopo aver generato un PDF.');
+            }
+        }
+
+
+
+        async function loadPDFFromURL(pdfUrl, title) {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const flipbook = document.getElementById('flipbook');
+            
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            flipbook.innerHTML = '';
+            
+            try {
+                currentPDF = {
+                    title: title,
+                    pdfUrl: pdfUrl,
+                    store: 'PDF Generato'
+                };
+                
+                await convertPDFToImages(pdfUrl);
+                
+            } catch (err) {
+                loading.style.display = 'none';
+                showError(`Errore nel caricamento del PDF: ${err.message}`);
+                console.error('Errore nel caricamento del flipbook:', err);
+            }
+        }
+
+
+
+        async function convertPDFToImages(pdfUrl) {
+            const loading = document.getElementById('loading');
+            const flipbook = document.getElementById('flipbook');
+            
+            try {
+                // Configure PDF.js worker
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                
+                // Load PDF document
+                const loadingTask = pdfjsLib.getDocument(pdfUrl);
+                const pdf = await loadingTask.promise;
+                
+                pageCount = pdf.numPages;
+                currentPages = [];
+                
+                // Convert each page to canvas/image
+                for (let pageNum = 1; pageNum <= pageCount; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    
+                    // Set up canvas
+                    const scale = 1.5;
+                    const viewport = page.getViewport({ scale });
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    
+                    // Render page to canvas
+                    const renderContext = {
+                        canvasContext: context,
+                        viewport: viewport
+                    };
+                    
+                    await page.render(renderContext).promise;
+                    
+                    // Convert canvas to data URL
+                    const imageUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    
+                    currentPages.push({
+                        pageNumber: pageNum,
+                        imageUrl: imageUrl
+                    });
+                    
+                    // Update loading progress
+                    const progress = Math.round((pageNum / pageCount) * 100);
+                    document.querySelector('#loading p').textContent = `Caricamento pagina ${pageNum}/${pageCount} (${progress}%)...`;
+                }
+                
+                await createFlipbook();
+                loading.style.display = 'none';
+                
+            } catch (error) {
+                loading.style.display = 'none';
+                showError('Errore nella conversione del PDF: ' + error.message);
+                console.error('Errore nella conversione:', error);
+            }
+        }
+
+        async function createFlipbook() {
+            const flipbook = $('#flipbook');
+            flipbook.empty();
+            
+            // Add pages to flipbook
+            currentPages.forEach((page, index) => {
+                const pageDiv = $(`
+                    <div class="page">
+                        <img src="${page.imageUrl}" alt="Pagina ${page.pageNumber}" />
+                        <div class="page-number">${page.pageNumber}</div>
+                    </div>
+                `);
+                flipbook.append(pageDiv);
+            });
+            
+            // Initialize turn.js
+            flipbook.turn({
+                width: 800,
+                height: 600,
+                autoCenter: true,
+                acceleration: true,
+                gradients: true,
+                elevation: 50,
+                when: {
+                    turning: function(event, page, view) {
+                        // Show ad every 5 pages
+                        if (page % 5 === 0 && page > 1) {
+                            showInterstitialAd();
+                        }
+                        updateControls();
+                    },
+                    turned: function(event, page, view) {
+                        updateControls();
+                        showSideAd();
+                    }
+                }
+            });
+            
+            updateControls();
+            showSideAd();
+        }
+
+        function previousPage() {
+            $('#flipbook').turn('previous');
+        }
+
+        function nextPage() {
+            $('#flipbook').turn('next');
+        }
+
+        function updateControls() {
+            const flipbook = $('#flipbook');
+            const currentPage = flipbook.turn('page');
+            const totalPages = flipbook.turn('pages');
+            
+            document.getElementById('prevBtn').disabled = currentPage <= 1;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+        }
+
+        function zoomIn() {
+            zoomLevel = Math.min(zoomLevel + 0.2, 2);
+            applyZoom();
+        }
+
+        function zoomOut() {
+            zoomLevel = Math.max(zoomLevel - 0.2, 0.5);
+            applyZoom();
+        }
+
+        function applyZoom() {
+            const flipbook = document.getElementById('flipbook');
+            flipbook.style.transform = `scale(${zoomLevel})`;
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // AdSense Integration
+        function initializeAdSense() {
+            // Initialize Google AdSense
+            try {
+                (adsbygoogle = window.adsbygoogle || []).push({});
+                console.log('AdSense initialized');
+            } catch (e) {
+                console.error('AdSense initialization error:', e);
+            }
+        }
+
+        function showSideAd() {
+            const adContainer = document.getElementById('adContainer');
+            adContainer.style.display = 'block';
+            
+            // Refresh AdSense ads
+            try {
+                (adsbygoogle = window.adsbygoogle || []).push({});
+                console.log('Side ad refreshed');
+            } catch (e) {
+                console.error('AdSense refresh error:', e);
+            }
+        }
+
+        function showInterstitialAd() {
+            adCounter++;
+            if (adCounter % 3 === 0) { // Show every 3rd time
+                const overlay = document.getElementById('adOverlay');
+                overlay.style.display = 'flex';
+                
+                // Load interstitial ad
+                try {
+                    (adsbygoogle = window.adsbygoogle || []).push({});
+                } catch (e) {
+                    console.error('Interstitial ad error:', e);
+                }
+                
+                // Auto-close after 8 seconds
+                setTimeout(() => {
+                    closeAdModal();
+                }, 8000);
+            }
+        }
+
+        function closeAdModal() {
+            const overlay = document.getElementById('adOverlay');
+            overlay.style.display = 'none';
+        }
+
+        function showError(message) {
+            const error = document.getElementById('error');
+            error.textContent = message;
+            error.style.display = 'block';
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                previousPage();
+            } else if (e.key === 'ArrowRight') {
+                nextPage();
+            } else if (e.key === 'Escape') {
+                closeAdModal();
+            }
+        });
+    </script>
+</body>
+</html>
