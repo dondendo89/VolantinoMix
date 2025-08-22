@@ -53,11 +53,22 @@ class PDFService {
                 throw new Error('Array di volantini vuoto o non valido');
             }
 
+            // Log della query prima dell'esecuzione
+            console.log(`[MERGE-${mergeId}] Query volantini:`, {
+                volantiniIds,
+                query: { _id: { $in: volantiniIds }, isActive: true }
+            });
+
             // Recupera i volantini dal database
             const volantini = await Volantino.find({
                 _id: { $in: volantiniIds },
                 isActive: true
             }).lean();
+
+            console.log(`[MERGE-${mergeId}] Risultati query:`, {
+                found: volantini.length,
+                volantini: volantini.map(v => ({ id: v._id, store: v.store, isActive: v.isActive }))
+            });
 
             // Log dettagliato per volantini mancanti
             const foundIds = volantini.map(v => v._id.toString());

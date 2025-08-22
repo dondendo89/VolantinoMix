@@ -78,7 +78,7 @@ router.post('/run/:jobName', [
         console.log(`🔧 DEBUG - Esecuzione manuale job: ${jobName}`);
         
         // Verifica che il job esista
-        const validJobs = ['deco-scraping', 'eurospin-scraping', 'cleanup-expired', 'expired-check'];
+        const validJobs = ['deco-scraping', 'eurospin-scraping', 'cleanup-expired', 'expired-check', 'pdf-cleanup'];
         if (!validJobs.includes(jobName)) {
             return res.status(400).json({
                 success: false,

@@ -2,6 +2,7 @@ const cron = require('node-cron');
 const { spawn } = require('child_process');
 const path = require('path');
 const Volantino = require('../models/Volantino');
+const PDFService = require('./pdfService');
 
 class JobScheduler {
     constructor() {
@@ -31,6 +32,9 @@ class JobScheduler {
         
         // Job per controllo volantini scaduti - ogni giorno alle 09:00
         this.scheduleExpiredCheck();
+        
+        // Job per pulizia file PDF temporanei - ogni giorno alle 03:00
+        this.schedulePDFCleanup();
         
         this.isInitialized = true;
         console.log('✅ JobScheduler inizializzato con successo');
@@ -177,7 +181,42 @@ class JobScheduler {
     }
 
     /**
-     * Esegue lo scraping dei volantini Decò
+     * Programma la pulizia automatica dei file PDF temporanei
+     * Esegue ogni giorno alle 03:00 per eliminare file più vecchi di 24 ore
+     */
+    schedulePDFCleanup() {
+        const jobName = 'pdf-cleanup';
+        
+        // Cron: ogni giorno alle 03:00
+        const cronExpression = '0 3 * * *';
+        
+        const task = cron.schedule(cronExpression, async () => {
+            console.log('🗑️ [CRON] Avvio pulizia file PDF temporanei...');
+            
+            try {
+                await this.executePDFCleanup();
+            } catch (error) {
+                console.error('❌ [CRON] Errore durante pulizia PDF:', error);
+            }
+        }, {
+            scheduled: false,
+            timezone: 'Europe/Rome'
+        });
+        
+        this.jobs.set(jobName, {
+            task,
+            cronExpression,
+            description: 'Pulizia file PDF temporanei ogni giorno',
+            lastRun: null,
+            nextRun: null
+        });
+        
+        task.start();
+        console.log(`📅 Job '${jobName}' programmato: ${cronExpression}`);
+    }
+
+    /**
+     * Esegue lo scraping automatico dei volantini Decò
      */
     async executeDecoScraping() {
         return new Promise((resolve, reject) => {
@@ -317,6 +356,33 @@ class JobScheduler {
     }
 
     /**
+     * Esegue la pulizia dei file PDF temporanei
+     */
+    async executePDFCleanup() {
+        console.log('🗑️ [PDF-CLEANUP] Avvio pulizia file PDF temporanei...');
+        
+        try {
+            const result = await PDFService.cleanupTempFiles(24); // 24 ore
+            
+            const jobInfo = this.jobs.get('pdf-cleanup');
+            if (jobInfo) {
+                jobInfo.lastRun = new Date();
+            }
+            
+            console.log(`✅ [PDF-CLEANUP] Eliminati ${result.deletedCount} file PDF temporanei`);
+            
+            return {
+                deleted: result.deletedCount,
+                maxAge: '24 ore'
+            };
+            
+        } catch (error) {
+            console.error('❌ [PDF-CLEANUP] Errore durante pulizia PDF:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Controlla se ci sono volantini scaduti e attiva lo scraping se necessario
      */
     async checkExpiredFlyers() {
@@ -397,6 +463,8 @@ class JobScheduler {
                     return await this.executeEurospinScraping();
                 case 'cleanup-expired':
                     return await this.executeCleanup();
+                case 'pdf-cleanup':
+                    return await this.executePDFCleanup();
                 case 'expired-check':
                     return await this.checkExpiredFlyers();
                 default:

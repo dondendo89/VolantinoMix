@@ -188,6 +188,9 @@ volantinoSchema.virtual('daysRemaining').get(function() {
 
 // Virtual per il nome completo della posizione
 volantinoSchema.virtual('fullLocation').get(function() {
+    if (!this.location || !this.location.address || !this.location.city || !this.location.cap) {
+        return 'Posizione non disponibile';
+    }
     return `${this.location.address}, ${this.location.city} (${this.location.cap})`;
 });
 
