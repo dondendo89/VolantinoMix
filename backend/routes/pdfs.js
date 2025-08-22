@@ -448,7 +448,7 @@ router.get('/download/:filename', async (req, res) => {
         
         // Validazione del nome file per sicurezza
         // Accetta sia il formato upload (volantino-timestamp-random.pdf) che il formato merge (volantino-mix-hash-timestamp.pdf)
-        if (!filename.match(/^volantino(-mix)?-[a-f0-9\d]+-\d+\.pdf$/)) {
+        if (!filename.match(/^volantino(-mix-[a-f0-9]+-\d+|-\d+-\d+)\.pdf$/)) {
             return res.status(400).json({
                 success: false,
                 error: 'Nome file non valido'
