@@ -7,8 +7,9 @@ const Volantino = require('../models/Volantino');
 
 class PDFService {
     constructor() {
-        this.tempDir = path.join(__dirname, '../../temp');
-        this.outputDir = path.join(__dirname, '../../public/pdfs');
+        // Su Render, usa /tmp per i file temporanei
+        this.tempDir = process.env.NODE_ENV === 'production' ? '/tmp' : path.join(__dirname, '../../temp');
+        this.outputDir = process.env.NODE_ENV === 'production' ? '/tmp/pdfs' : path.join(__dirname, '../../public/pdfs');
         this.maxFileSize = 50 * 1024 * 1024; // 50MB
         this.allowedMimeTypes = ['application/pdf'];
         

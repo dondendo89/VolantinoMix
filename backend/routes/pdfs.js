@@ -455,7 +455,9 @@ router.get('/download/:filename', async (req, res) => {
             });
         }
 
-        const filePath = path.join(__dirname, '../../public/pdfs', filename);
+        // Usa il percorso corretto in base all'ambiente
+        const pdfDir = process.env.NODE_ENV === 'production' ? '/tmp/pdfs' : path.join(__dirname, '../../public/pdfs');
+        const filePath = path.join(pdfDir, filename);
         
         try {
             await fs.access(filePath);
