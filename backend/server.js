@@ -143,6 +143,9 @@ if (process.env.NODE_ENV === 'development') {
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
+// Serve frontend files
+app.use(express.static(path.join(__dirname, '../frontend')));
+
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.status(200).json({
@@ -179,6 +182,20 @@ app.use('/api/mersi', mersiRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/duplicates', duplicatesRoutes);
 app.use('/api/import', importRoutes);
+
+// Root endpoint
+app.get('/', (req, res) => {
+    res.json({
+        message: 'VolantinoMix Backend API',
+        status: 'running',
+        version: '1.0.0',
+        endpoints: {
+            health: '/health',
+            api: '/api',
+            admin: '/admin'
+        }
+    });
+});
 
 // API documentation endpoint
 app.get('/api', (req, res) => {
@@ -240,6 +257,15 @@ process.on('SIGINT', () => {
         console.log('HTTP server closed');
         process.exit(0);
     });
+});
+
+// Catch-all handler: send back React's index.html file for SPA routing
+app.get('*', (req, res) => {
+    // Skip API routes
+    if (req.path.startsWith('/api/') || req.path.startsWith('/health') || req.path.startsWith('/admin')) {
+        return res.status(404).json({ error: 'Endpoint not found' });
+    }
+    res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
 // Start server
