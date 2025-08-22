@@ -3,19 +3,38 @@
   "rewrites": [
     {
       "source": "/health",
-      "destination": "/api"
+      "destination": "https://volantinomix-production-d308.up.railway.app/health"
     },
     {
       "source": "/admin/(.*)",
-      "destination": "/api"
+      "destination": "https://volantinomix-production-d308.up.railway.app/admin/$1"
     },
     {
       "source": "/api/(.*)",
-      "destination": "/api"
+      "destination": "https://volantinomix-production-d308.up.railway.app/api/$1"
     },
     {
       "source": "/(.*)",
       "destination": "/frontend/$1"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
     }
   ]
 }
