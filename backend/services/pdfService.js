@@ -37,7 +37,17 @@ class PDFService {
      * @returns {Promise<Object>} Informazioni sul PDF generato
      */
     async mergePDFsWithAds(volantiniIds, options = {}, userLocation = {}) {
+        const startTime = Date.now();
+        const mergeId = crypto.createHash('md5').update(volantiniIds.join('-') + startTime).digest('hex').substring(0, 8);
+        
         try {
+            console.log(`[MERGE-${mergeId}] Inizio merge di ${volantiniIds.length} volantini`, {
+                volantiniIds,
+                options,
+                userLocation,
+                timestamp: new Date().toISOString()
+            });
+            
             // Validazione input
             if (!Array.isArray(volantiniIds) || volantiniIds.length === 0) {
                 throw new Error('Array di volantini vuoto o non valido');
@@ -76,6 +86,14 @@ class PDFService {
 
             let pageCount = 0;
             const tableOfContents = [];
+            const mergeStats = {
+                totalVolantini: volantiniIds.length,
+                successfulVolantini: 0,
+                failedVolantini: 0,
+                placeholderPages: 0,
+                totalPages: 0,
+                errors: []
+            };
 
             // Inserisci pubblicità di copertina
             const coverAds = ads.filter(ad => ad.position === 'cover');
@@ -107,6 +125,9 @@ class PDFService {
                         pageCount++;
                     });
 
+                    // Incrementa contatore successi
+                    mergeStats.successfulVolantini++;
+
                     // Aggiungi al sommario
                     tableOfContents.push({
                         title: `${volantino.store} - ${volantino.location.city}`,
@@ -116,6 +137,8 @@ class PDFService {
                         category: volantino.category,
                         validUntil: volantino.validUntil
                     });
+
+                    console.log(`[MERGE-${mergeId}] Caricato con successo: ${volantino.store} - ${volantino.location.city} (${pages.length} pagine)`);
 
                     // Incrementa il contatore delle visualizzazioni
                     await Volantino.findByIdAndUpdate(volantino._id, {
@@ -137,7 +160,62 @@ class PDFService {
                     }
 
                 } catch (error) {
-                    console.error(`Errore nel caricamento del volantino ${volantino._id}:`, error);
+                    mergeStats.failedVolantini++;
+                    mergeStats.errors.push({
+                        volantino: `${volantino.store} - ${volantino.location.city}`,
+                        error: error.message,
+                        errorType: error.message.includes('HTTP 404') ? 'URL_NOT_FOUND' : 
+                                  error.message.includes('ENOENT') ? 'FILE_NOT_FOUND' : 'OTHER'
+                    });
+                    
+                    console.error(`[MERGE-${mergeId}] Errore nel caricamento del volantino ${volantino._id} (${volantino.store} - ${volantino.location.city}):`, {
+                        error: error.message,
+                        pdfUrl: volantino.pdfUrl,
+                        pdfPath: volantino.pdfPath,
+                        errorType: error.message.includes('HTTP 404') ? 'URL_NOT_FOUND' : 
+                                  error.message.includes('ENOENT') ? 'FILE_NOT_FOUND' : 'OTHER'
+                    });
+                    
+                    try {
+                        // Crea una pagina placeholder per il volantino non disponibile
+                        const placeholderPDF = await this.createPlaceholderPage(volantino, error);
+                        const placeholderPages = await mergedPDF.copyPages(placeholderPDF, [0]);
+                        
+                        for (const page of placeholderPages) {
+                            mergedPDF.addPage(page);
+                            pageCount++;
+                        }
+                        
+                        mergeStats.placeholderPages++;
+                        
+                        // Aggiungi al sommario come volantino non disponibile
+                        tableOfContents.push({
+                            title: `${volantino.store} - ${volantino.location.city} (Non disponibile)`,
+                            page: pageCount,
+                            pages: 1,
+                            type: 'flyer_error',
+                            category: volantino.category,
+                            validUntil: volantino.validUntil,
+                            error: error.message.includes('HTTP 404') ? 'PDF non più disponibile' : 'Errore di caricamento'
+                        });
+                        
+                        console.log(`[MERGE-${mergeId}] Aggiunta pagina placeholder per ${volantino.store} - ${volantino.location.city}`);
+                        
+                    } catch (placeholderError) {
+                        console.error(`[MERGE-${mergeId}] Errore nella creazione del placeholder per ${volantino._id}:`, placeholderError);
+                        
+                        // Fallback: aggiungi solo al sommario senza pagina
+                        tableOfContents.push({
+                            title: `${volantino.store} - ${volantino.location.city} (Non disponibile)`,
+                            page: null,
+                            pages: 0,
+                            type: 'flyer_error',
+                            category: volantino.category,
+                            validUntil: volantino.validUntil,
+                            error: 'Errore critico di caricamento'
+                        });
+                    }
+                    
                     // Continua con gli altri volantini
                 }
             }
@@ -210,11 +288,30 @@ class PDFService {
                 }
             };
 
-            console.log(`PDF generato con successo: ${filename} (${this.formatFileSize(fileSize)}, ${totalPages} pagine)`);
+            // Aggiorna statistiche finali
+             mergeStats.totalPages = totalPages;
+            
+            const processingTime = Date.now() - startTime;
+            
+            console.log(`[MERGE-${mergeId}] PDF generato con successo: ${filename}`, {
+                fileSize: this.formatFileSize(fileSize),
+                totalPages,
+                processingTime: `${processingTime}ms`,
+                stats: mergeStats,
+                result
+            });
+            
             return result;
 
         } catch (error) {
-            console.error('Errore nel merging dei PDF:', error);
+            const processingTime = Date.now() - startTime;
+            console.error(`[MERGE-${mergeId}] Errore nel merging dei PDF:`, {
+                error: error.message,
+                stack: error.stack,
+                processingTime: `${processingTime}ms`,
+                volantiniIds,
+                options
+            });
             throw new Error(`Errore nella generazione del PDF: ${error.message}`);
         }
     }
@@ -337,6 +434,162 @@ class PDFService {
     }
 
     /**
+     * Crea una pagina placeholder per volantini non disponibili
+     */
+    async createPlaceholderPage(volantino, error) {
+        try {
+            const pdfDoc = await PDFDocument.create();
+            const page = pdfDoc.addPage([595.28, 841.89]);
+            const { width, height } = page.getSize();
+            const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+            const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+            
+            const margin = 50;
+            let currentY = height - 100;
+
+            // Colori
+            const errorColor = rgb(0.8, 0.2, 0.2);
+            const textColor = rgb(0.3, 0.3, 0.3);
+            const bgColor = rgb(0.95, 0.95, 0.95);
+
+            // Background
+            page.drawRectangle({
+                x: 0,
+                y: 0,
+                width: width,
+                height: height,
+                color: bgColor
+            });
+
+            // Header con errore
+            page.drawRectangle({
+                x: margin,
+                y: currentY - 20,
+                width: width - 2 * margin,
+                height: 60,
+                color: rgb(1, 0.9, 0.9),
+                borderColor: errorColor,
+                borderWidth: 2
+            });
+
+            page.drawText('VOLANTINO NON DISPONIBILE', {
+                x: margin + 20,
+                y: currentY,
+                size: 20,
+                font: boldFont,
+                color: errorColor
+            });
+            currentY -= 80;
+
+            // Informazioni volantino
+            page.drawText(`Store: ${volantino.store}`, {
+                x: margin,
+                y: currentY,
+                size: 16,
+                font: boldFont,
+                color: textColor
+            });
+            currentY -= 30;
+
+            page.drawText(`Città: ${volantino.location.city}`, {
+                x: margin,
+                y: currentY,
+                size: 14,
+                font: font,
+                color: textColor
+            });
+            currentY -= 25;
+
+            page.drawText(`Categoria: ${volantino.category}`, {
+                x: margin,
+                y: currentY,
+                size: 14,
+                font: font,
+                color: textColor
+            });
+            currentY -= 25;
+
+            if (volantino.validUntil) {
+                page.drawText(`Valido fino al: ${new Date(volantino.validUntil).toLocaleDateString('it-IT')}`, {
+                    x: margin,
+                    y: currentY,
+                    size: 14,
+                    font: font,
+                    color: textColor
+                });
+                currentY -= 40;
+            }
+
+            // Motivo dell'errore
+            page.drawText('Motivo:', {
+                x: margin,
+                y: currentY,
+                size: 14,
+                font: boldFont,
+                color: textColor
+            });
+            currentY -= 25;
+
+            const errorMessage = error.message.includes('HTTP 404') ? 
+                'Il PDF non è più disponibile sul server' :
+                error.message.includes('ENOENT') ?
+                'File non trovato nel sistema' :
+                'Errore di caricamento del PDF';
+
+            page.drawText(errorMessage, {
+                x: margin,
+                y: currentY,
+                size: 12,
+                font: font,
+                color: errorColor
+            });
+            currentY -= 40;
+
+            // Suggerimenti
+            page.drawText('Suggerimenti:', {
+                x: margin,
+                y: currentY,
+                size: 14,
+                font: boldFont,
+                color: textColor
+            });
+            currentY -= 25;
+
+            const suggestions = [
+                '• Controlla se il volantino è ancora valido',
+                '• Verifica la connessione internet',
+                '• Riprova più tardi',
+                '• Contatta il supporto se il problema persiste'
+            ];
+
+            for (const suggestion of suggestions) {
+                page.drawText(suggestion, {
+                    x: margin,
+                    y: currentY,
+                    size: 12,
+                    font: font,
+                    color: textColor
+                });
+                currentY -= 20;
+            }
+
+            // Footer
+            page.drawText(`Generato il ${new Date().toLocaleDateString('it-IT')} alle ${new Date().toLocaleTimeString('it-IT')}`, {
+                x: margin,
+                y: 30,
+                size: 10,
+                font: font,
+                color: rgb(0.5, 0.5, 0.5)
+            });
+
+            return pdfDoc;
+        } catch (error) {
+            console.error('Errore nella creazione della pagina placeholder:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Crea una pagina sommario
      */
     async createTableOfContentsPage(pdfDoc, tableOfContents, insertIndex = 0) {
@@ -394,9 +647,19 @@ class PDFService {
             for (const item of tableOfContents) {
                 if (currentY < 100) break; // Evita overflow
 
-                const icon = item.type === 'ad' ? '[AD]' : '[PDF]';
-                const title = `${icon} ${item.title}`;
-                const pageText = `Pag. ${item.page}`;
+                let icon, title, pageText, titleColor;
+                
+                if (item.type === 'flyer_error') {
+                    icon = '[ERR]';
+                    title = `${icon} ${item.title}`;
+                    pageText = item.error || 'Non disponibile';
+                    titleColor = rgb(0.8, 0.2, 0.2); // Rosso per errori
+                } else {
+                    icon = item.type === 'ad' ? '[AD]' : '[PDF]';
+                    title = `${icon} ${item.title}`;
+                    pageText = `Pag. ${item.page}`;
+                    titleColor = item.type === 'ad' ? rgb(0.6, 0.6, 0.6) : textColor;
+                }
 
                 // Titolo
                 page.drawText(title, {
@@ -404,29 +667,31 @@ class PDFService {
                     y: currentY,
                     size: 12,
                     font: item.type === 'ad' ? font : boldFont,
-                    color: item.type === 'ad' ? rgb(0.6, 0.6, 0.6) : textColor
+                    color: titleColor
                 });
 
-                // Numero pagina
+                // Numero pagina o messaggio di errore
                 page.drawText(pageText, {
-                    x: width - margin - 60,
+                    x: width - margin - 120,
                     y: currentY,
-                    size: 12,
+                    size: 10,
                     font: font,
-                    color: textColor
+                    color: item.type === 'flyer_error' ? rgb(0.8, 0.2, 0.2) : textColor
                 });
 
-                // Linea punteggiata
-                const dotsStart = margin + 250;
-                const dotsEnd = width - margin - 80;
-                for (let x = dotsStart; x < dotsEnd; x += 10) {
-                    page.drawText('.', {
-                        x: x,
-                        y: currentY,
-                        size: 8,
-                        font: font,
-                        color: rgb(0.7, 0.7, 0.7)
-                    });
+                // Linea punteggiata (solo per volantini e pubblicità, non per errori)
+                if (item.type !== 'flyer_error') {
+                    const dotsStart = margin + 250;
+                    const dotsEnd = width - margin - 140;
+                    for (let x = dotsStart; x < dotsEnd; x += 10) {
+                        page.drawText('.', {
+                            x: x,
+                            y: currentY,
+                            size: 8,
+                            font: font,
+                            color: rgb(0.7, 0.7, 0.7)
+                        });
+                    }
                 }
 
                 currentY -= 25;
@@ -453,8 +718,17 @@ class PDFService {
                 color: rgb(0.5, 0.5, 0.5)
             });
 
-            page.drawText(`Totale: ${tableOfContents.filter(t => t.type === 'flyer').length} volantini, ${tableOfContents.filter(t => t.type === 'ad').length} pubblicità`, {
-                x: width - 250,
+            const flyerCount = tableOfContents.filter(t => t.type === 'flyer').length;
+            const adCount = tableOfContents.filter(t => t.type === 'ad').length;
+            const errorCount = tableOfContents.filter(t => t.type === 'flyer_error').length;
+            
+            let summaryText = `Totale: ${flyerCount} volantini, ${adCount} pubblicità`;
+            if (errorCount > 0) {
+                summaryText += `, ${errorCount} non disponibili`;
+            }
+            
+            page.drawText(summaryText, {
+                x: width - 300,
                 y: 30,
                 size: 10,
                 font: font,
