@@ -59,8 +59,39 @@ class PDFService {
                 isActive: true
             }).lean();
 
+            // Log dettagliato per volantini mancanti
+            const foundIds = volantini.map(v => v._id.toString());
+            const missingIds = volantiniIds.filter(id => !foundIds.includes(id.toString()));
+            
+            if (missingIds.length > 0) {
+                console.warn(`[MERGE-${mergeId}] Volantini non trovati o inattivi:`, {
+                    requestedIds: volantiniIds,
+                    foundIds,
+                    missingIds,
+                    timestamp: new Date().toISOString()
+                });
+                
+                // Verifica se i volantini mancanti esistono ma sono inattivi
+                const inactiveVolantini = await Volantino.find({
+                    _id: { $in: missingIds },
+                    isActive: false
+                }).lean();
+                
+                if (inactiveVolantini.length > 0) {
+                    console.warn(`[MERGE-${mergeId}] Volantini disattivati trovati:`, 
+                        inactiveVolantini.map(v => ({
+                            id: v._id,
+                            store: v.store,
+                            location: v.location?.city,
+                            validUntil: v.validUntil,
+                            deactivatedAt: v.updatedAt
+                        }))
+                    );
+                }
+            }
+
             if (volantini.length === 0) {
-                throw new Error('Nessun volantino valido trovato');
+                throw new Error(`Nessun volantino valido trovato. Richiesti: ${volantiniIds.length}, Trovati: 0`);
             }
 
             // Ordina i volantini secondo l'ordine richiesto
@@ -391,7 +422,17 @@ class PDFService {
             return await PDFDocument.load(pdfBytes);
 
         } catch (error) {
-            console.error(`Errore nel caricamento PDF da ${url}:`, error);
+            const errorDetails = {
+                url,
+                errorMessage: error.message,
+                errorType: error.message.includes('HTTP 404') ? 'URL_NOT_FOUND' : 
+                          error.message.includes('ENOENT') ? 'FILE_NOT_FOUND' : 
+                          error.message.includes('HTTP') ? 'HTTP_ERROR' : 'OTHER',
+                timestamp: new Date().toISOString(),
+                isProduction: process.env.NODE_ENV === 'production'
+            };
+            
+            console.error(`Errore nel caricamento PDF da ${url}:`, errorDetails);
             throw error;
         }
     }
@@ -428,7 +469,25 @@ class PDFService {
             
             throw new Error('Nessun percorso PDF valido trovato per il volantino');
         } catch (error) {
-            console.error(`Errore nel caricamento del volantino ${volantino._id}:`, error);
+            const errorDetails = {
+                volantino: {
+                    id: volantino._id,
+                    store: volantino.store,
+                    location: volantino.location?.city,
+                    source: volantino.source,
+                    pdfUrl: volantino.pdfUrl,
+                    pdfPath: volantino.pdfPath,
+                    validUntil: volantino.validUntil
+                },
+                errorMessage: error.message,
+                errorType: error.message.includes('HTTP 404') ? 'URL_NOT_FOUND' : 
+                          error.message.includes('ENOENT') ? 'FILE_NOT_FOUND' : 
+                          error.message.includes('HTTP') ? 'HTTP_ERROR' : 'OTHER',
+                timestamp: new Date().toISOString(),
+                isProduction: process.env.NODE_ENV === 'production'
+            };
+            
+            console.error(`Errore nel caricamento del volantino ${volantino._id} (${volantino.store} - ${volantino.location?.city}):`, errorDetails);
             throw error;
         }
     }
