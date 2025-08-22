@@ -1,9 +1,9 @@
 // Configuration for VolantinoMix Frontend
 const CONFIG = {
     // Backend API URL - automatically detects environment
-    API_BASE_URL: (() => {
+    get API_BASE_URL() {
         // Check if we're in development (localhost)
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
             return 'http://localhost:5000';
         }
         
@@ -12,9 +12,9 @@ const CONFIG = {
             return process.env.BACKEND_URL;
         }
         
-        // Production fallback - use current origin for unified deployment
-        return window.location.origin;
-    })(),
+        // Production fallback - Railway backend URL
+        return 'https://volantinomix-production-d308.up.railway.app';
+    },
     
     // API endpoints
     API_ENDPOINTS: {
