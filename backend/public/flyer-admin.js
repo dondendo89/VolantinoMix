@@ -169,7 +169,7 @@ function createFlyerCard(flyer) {
             ` : ''}
             
             <div class="flyer-actions">
-                ${flyer.pdfPath || flyer.filename ? `
+                ${flyer.pdfPath || flyer.filename || flyer.pdfUrl ? `
                     <button class="btn btn-primary btn-small" onclick="viewPDF('${flyer._id}', '${flyer.source}')">
                         👁️ Visualizza
                     </button>
@@ -394,12 +394,17 @@ async function deleteSingleFlyer(flyerId, source) {
 function viewPDF(flyerId, source) {
     let pdfUrl;
     
+    const flyer = allFlyers.find(f => f._id === flyerId);
+    
     if (source === 'upload') {
-        const flyer = allFlyers.find(f => f._id === flyerId);
         if (flyer && flyer.filename) {
             pdfUrl = `/api/pdfs/view/${flyer.filename}`;
         }
+    } else if (flyer && flyer.pdfUrl) {
+        // Per volantini con pdfUrl diretto (come Deco)
+        pdfUrl = flyer.pdfUrl;
     } else {
+        // Fallback per altri scraper con route dedicate
         pdfUrl = `/api/${source}/pdf/${flyerId}`;
     }
     
