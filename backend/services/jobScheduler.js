@@ -184,10 +184,13 @@ class JobScheduler {
             console.log('🚀 [SCRAPING] Avvio script scraper_deco.py...');
             
             const scriptPath = path.join(__dirname, '../../scraper_deco.py');
+            // Auto-detect API URL based on environment
+            const port = process.env.PORT || '3000';
+            const apiUrl = `http://localhost:${port}/api`;
             const args = [
                 scriptPath,
                 '--folder', 'volantini_deco',
-                '--api', 'http://localhost:5000/api'
+                '--api', apiUrl
             ];
             
             const pythonProcess = spawn('python3', args, {
