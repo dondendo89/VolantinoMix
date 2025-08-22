@@ -26,7 +26,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class EurospinScraper:
-    def __init__(self, api_base_url="http://localhost:5000/api"):
+    def __init__(self, api_base_url="https://volantinomix-production-d308.up.railway.app/api"):
         self.base_url = "https://www.eurospin.it"
         self.api_base_url = api_base_url
         # URL alternativi per cercare volantini

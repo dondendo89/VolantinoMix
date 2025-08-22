@@ -5,7 +5,7 @@ import re
 import datetime
 
 class MersiVolantiniScraper:
-    def __init__(self, base_url='https://www.mersisupermercati.com/volantino/', upload_url='http://localhost:5000/api/pdfs/upload', download_dir='volantini/mersi'):
+    def __init__(self, base_url='https://www.mersisupermercati.com/volantino/', upload_url='https://volantinomix-production-d308.up.railway.app/api/pdfs/upload', download_dir='volantini/mersi'):
         self.base_url = base_url
         self.upload_url = upload_url
         self.download_dir = download_dir

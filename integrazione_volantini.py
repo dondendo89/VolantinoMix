@@ -18,7 +18,7 @@ from scraper_volantini import VolantiniScraper
 from scraper_mersi import MersiVolantiniScraper
 
 class VolantinoMixIntegrator:
-    def __init__(self, api_base_url="http://localhost:5000/api", volantini_folder="volantini"):
+    def __init__(self, api_base_url="https://volantinomix-production-d308.up.railway.app/api", volantini_folder="volantini"):
         self.api_base_url = api_base_url
         self.volantini_folder = volantini_folder
         self.session = requests.Session()

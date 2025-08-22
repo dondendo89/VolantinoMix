@@ -30,7 +30,7 @@ except ImportError:
     print("⚠️  Selenium non disponibile. Usando solo requests/BeautifulSoup.")
 
 class IpercoopVolantiniScraper:
-    def __init__(self, download_folder="volantini_ipercoop", api_base_url="http://localhost:5000/api"):
+    def __init__(self, download_folder="volantini_ipercoop", api_base_url="https://volantinomix-production-d308.up.railway.app/api"):
         self.base_url = "https://volantini.coopgrupporadenza.it"
         self.volantini_url = "https://volantini.coopgrupporadenza.it/"
         self.download_folder = Path(download_folder)
