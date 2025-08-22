@@ -48,10 +48,10 @@ router.post('/all', [
             duration: null
         };
 
-        // Percorso base del progetto (dove sono gli script Python nel container)
-        // In produzione usa sempre la working directory corrente
+        // Percorso base del progetto (dove sono gli script Python)
+        // In locale usa la cartella parent, in produzione usa la directory corrente
         const isLocal = __dirname.includes('/Users/') || __dirname.includes('/home/');
-        const projectRoot = isLocal ? path.join(__dirname, '..') : '/app';
+        const projectRoot = isLocal ? path.join(__dirname, '..') : __dirname.replace('/routes', '');
 
         // Configurazione script per ogni fonte
         const scriptConfigs = {
@@ -306,7 +306,7 @@ router.get('/status', async (req, res) => {
         // Usa la stessa logica del percorso dell'endpoint /all
         // In produzione usa sempre la working directory corrente
         const isLocal = __dirname.includes('/Users/') || __dirname.includes('/home/');
-        const projectRoot = isLocal ? path.join(__dirname, '..') : '/app';
+        const projectRoot = isLocal ? path.join(__dirname, '..') : __dirname.replace('/routes', '');
         
         const scripts = [
             'scraper_deco.py',
@@ -380,7 +380,7 @@ router.post('/source/:sourceName', [
 
         const scriptName = scriptConfigs[sourceName];
         const isLocal = __dirname.includes('/Users/') || __dirname.includes('/home/');
-        const projectRoot = isLocal ? path.join(__dirname, '..') : '/app';
+        const projectRoot = isLocal ? path.join(__dirname, '..') : __dirname.replace('/routes', '');
         const scriptPath = path.join(projectRoot, scriptName);
 
         if (!fs.existsSync(scriptPath)) {
