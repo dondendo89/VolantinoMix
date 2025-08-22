@@ -270,15 +270,69 @@
     <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXX" crossorigin="anonymous"></script>
     
-    <!-- PDF.js Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- PDF.js Library with fallback -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" onerror="loadFallbackScript('libs/pdf.min.js', 'PDF.js')"></script>
     
-    <!-- Turn.js Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/3/turn.min.js"></script>
+    <!-- jQuery Library with fallback -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" onerror="loadFallbackScript('libs/jquery.min.js', 'jQuery')"></script>
     
-    <script src="config.js"></script>
+    <!-- Turn.js Library with fallback -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/3/turn.min.js" onerror="loadFallbackScript('libs/turn.min.js', 'Turn.js')"></script>
+    
+    <script src="config.js" onerror="handleLibraryError('Config.js')"></script>
     <script>
+        // Gestione errori caricamento librerie
+         function handleLibraryError(libraryName) {
+             console.error(`Errore nel caricamento di ${libraryName}`);
+             showError(`Errore nel caricamento della libreria ${libraryName}. Verifica la connessione internet.`);
+         }
+         
+         // Caricamento fallback per librerie
+         function loadFallbackScript(fallbackUrl, libraryName) {
+             console.warn(`CDN fallito per ${libraryName}, tentativo con versione locale: ${fallbackUrl}`);
+             
+             const script = document.createElement('script');
+             script.src = fallbackUrl;
+             script.onload = function() {
+                 console.log(`${libraryName} caricato con successo dalla versione locale`);
+             };
+             script.onerror = function() {
+                 console.error(`Errore anche nel caricamento della versione locale di ${libraryName}`);
+                 handleLibraryError(libraryName + ' (locale)');
+             };
+             
+             document.head.appendChild(script);
+         }
+        
+        // Verifica che tutte le librerie siano caricate
+         function checkLibrariesLoaded() {
+             const errors = [];
+             
+             if (typeof pdfjsLib === 'undefined') {
+                 errors.push('PDF.js non caricato');
+             }
+             if (typeof $ === 'undefined') {
+                 errors.push('jQuery non caricato');
+             }
+             if (typeof CONFIG === 'undefined') {
+                 errors.push('Config.js non caricato');
+             }
+             
+             // Verifica Turn.js dopo che jQuery è caricato
+             if (typeof $ !== 'undefined' && typeof $.fn.turn === 'undefined') {
+                 errors.push('Turn.js non caricato');
+             }
+             
+             if (errors.length > 0) {
+                 showError('Errori nel caricamento delle librerie: ' + errors.join(', '));
+                 console.error('Librerie mancanti:', errors);
+                 return false;
+             }
+             
+             console.log('Tutte le librerie caricate correttamente');
+             return true;
+         }
+        
         const API_BASE = CONFIG.getApiUrl('');
         let currentPDF = null;
         let currentPages = [];
@@ -288,6 +342,9 @@
 
         // Initialize on page load
         $(document).ready(function() {
+            if (!checkLibrariesLoaded()) {
+                return;
+            }
             checkURLParameters();
             initializeAdSense();
         });
@@ -323,6 +380,20 @@
             flipbook.innerHTML = '';
             
             try {
+                console.log('Tentativo di caricamento PDF da:', pdfUrl);
+                
+                // Verifica accessibilità del PDF
+                try {
+                    const response = await fetch(pdfUrl, { method: 'HEAD' });
+                    console.log('Status response PDF:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`PDF non accessibile (Status: ${response.status})`);
+                    }
+                } catch (fetchError) {
+                    console.error('Errore nella verifica del PDF:', fetchError);
+                    throw new Error('PDF non raggiungibile: ' + fetchError.message);
+                }
+                
                 currentPDF = {
                     title: title,
                     pdfUrl: pdfUrl,
@@ -333,7 +404,23 @@
                 
             } catch (err) {
                 loading.style.display = 'none';
-                showError(`Errore nel caricamento del PDF: ${err.message}`);
+                console.error('Errore dettagliato nel caricamento del PDF:', err);
+                
+                let errorMessage = 'Errore nel caricamento del PDF';
+                
+                if (err.name === 'InvalidPDFException') {
+                    errorMessage = 'Il file PDF è corrotto o non valido';
+                } else if (err.name === 'MissingPDFException') {
+                    errorMessage = 'PDF non trovato o non accessibile';
+                } else if (err.name === 'UnexpectedResponseException') {
+                    errorMessage = 'Errore di rete nel caricamento del PDF';
+                } else if (err.message.includes('CORS')) {
+                    errorMessage = 'Errore CORS: il PDF non può essere caricato da questo dominio';
+                } else {
+                    errorMessage += ': ' + err.message;
+                }
+                
+                showError(errorMessage);
                 console.error('Errore nel caricamento del flipbook:', err);
             }
         }
