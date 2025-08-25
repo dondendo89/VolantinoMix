@@ -82,7 +82,28 @@ class EurospinSiteScraper:
         try:
             r = self.session.get(self.start_url, timeout=20)
             r.raise_for_status()
-            pdfs = self.find_pdf_links(r.content, self.start_url)
+            pdfs = set(self.find_pdf_links(r.content, self.start_url))
+
+            # Cerca link con testo "Sfoglia il volantino" e seguili (profondità 1)
+            soup = BeautifulSoup(r.content, 'html.parser')
+            browse_links = []
+            for a in soup.find_all('a', href=True):
+                text = (a.get_text() or '').strip().lower()
+                if 'sfoglia il volantino' in text:
+                    href = a['href']
+                    browse_links.append(href if href.startswith('http') else urljoin(self.start_url, href))
+
+            for url in browse_links[:6]:
+                try:
+                    rr = self.session.get(url, timeout=20)
+                    if rr.ok:
+                        found = self.find_pdf_links(rr.content, url)
+                        pdfs.update(found)
+                        time.sleep(1)
+                except Exception:
+                    pass
+
+            pdfs = list(pdfs)
             print(f"[EurospinSite] PDF trovati: {len(pdfs)}")
             created = 0
             for url in pdfs:
