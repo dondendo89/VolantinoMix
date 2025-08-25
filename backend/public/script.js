@@ -1281,7 +1281,8 @@ function checkForNewVolantini() {
 initializeNotifications();
 
 // Service Worker registration for PWA capabilities
-if ('serviceWorker' in navigator) {
+// Service Worker disabilitato in produzione finché sw.js non è servito con MIME corretto
+if (false && 'serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
             .then(registration => {
