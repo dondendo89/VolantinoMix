@@ -382,18 +382,6 @@
             try {
                 console.log('Tentativo di caricamento PDF da:', pdfUrl);
                 
-                // Verifica accessibilità del PDF
-                try {
-                    const response = await fetch(pdfUrl, { method: 'HEAD' });
-                    console.log('Status response PDF:', response.status);
-                    if (!response.ok) {
-                        throw new Error(`PDF non accessibile (Status: ${response.status})`);
-                    }
-                } catch (fetchError) {
-                    console.error('Errore nella verifica del PDF:', fetchError);
-                    throw new Error('PDF non raggiungibile: ' + fetchError.message);
-                }
-                
                 currentPDF = {
                     title: title,
                     pdfUrl: pdfUrl,
