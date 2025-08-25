@@ -677,10 +677,19 @@ class VolantinoMix {
                 `;
                 resultDiv.style.display = 'block';
                 
-                // Inizializza il flipbook incorporato
-                setTimeout(() => {
-                    this.initEmbeddedFlipbook(result.url, result.filename);
-                }, 500);
+                // Integrazione flipbook via iframe (più performante)
+                try {
+                    const flipbookContainer = document.getElementById('embedded-flipbook');
+                    if (flipbookContainer) {
+                        const viewerUrl = `/flipbook-viewer.html?pdf=${encodeURIComponent(result.url)}&title=${encodeURIComponent(result.filename)}`;
+                        flipbookContainer.innerHTML = `<iframe src="${viewerUrl}" style="width:100%;height:80vh;border:0;" loading="lazy"></iframe>`;
+                    }
+                } catch (e) {
+                    // Fallback alla vecchia modalità in caso di errore
+                    setTimeout(() => {
+                        this.initEmbeddedFlipbook(result.url, result.filename);
+                    }, 500);
+                }
                 
                 // Mostra notifica di successo
                 this.showNotification(
