@@ -682,7 +682,9 @@ class VolantinoMix {
                     const flipbookContainer = document.getElementById('embedded-flipbook');
                     this.log('🔎 DEBUG flipbook embed (frontend): container?', !!flipbookContainer);
                     if (flipbookContainer) {
-                        const inlineUrl = (result.byId && result.byId.previewUrl) ? result.byId.previewUrl : (result.previewUrl || result.url || result.downloadUrl);
+                        // Costruisci URL preview affidabile anche se il backend non lo fornisce
+                        const guessedPreview = result.filename ? `/api/pdfs/preview/${result.filename}` : null;
+                        const inlineUrl = (result.byId && result.byId.previewUrl) || result.previewUrl || guessedPreview || result.url || result.downloadUrl;
                         this.log('🔎 DEBUG flipbook inlineUrl (frontend):', inlineUrl);
                         flipbookContainer.innerHTML = `
                             <object data="${inlineUrl}#view=FitH" type="application/pdf" style="width:100%;height:80vh;">
