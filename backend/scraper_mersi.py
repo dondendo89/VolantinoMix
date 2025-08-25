@@ -15,6 +15,14 @@ class MersiVolantiniScraper:
         self.upload_url = upload_url
         self.download_dir = download_dir
         os.makedirs(self.download_dir, exist_ok=True)
+        # Sessione con headers per evitare blocchi
+        self.session = requests.Session()
+        self.session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'it-IT,it;q=0.9,en;q=0.8',
+            'Connection': 'keep-alive'
+        })
 
     def scrape(self):
         response = requests.get(self.base_url)
@@ -78,9 +86,13 @@ class MersiVolantiniScraper:
     def download_pdf(self, url):
         try:
             print(f"Attempting to download: {url}")
-            response = requests.get(url)
+            response = self.session.get(url, timeout=30)
             response.raise_for_status()
             print(f"Response status: {response.status_code}, Content length: {len(response.content)}")
+            # Verifica che sia un PDF valido
+            if not response.content.startswith(b'%PDF'):
+                print(f"File non PDF rilevato, skip: {url}")
+                return None
             filename = os.path.join(self.download_dir, os.path.basename(url))
             print(f"Saving to: {filename}")
             with open(filename, 'wb') as f:
@@ -103,10 +115,15 @@ class MersiVolantiniScraper:
             files = {
                 'pdfs': (os.path.basename(filename), f, 'application/pdf')
             }
+            cap = store_info.get('cap') or '00000'
+            # Normalizza CAP a 5 cifre; fallback a 00000 se non valido
+            import re as _re
+            if not _re.match(r'^\d{5}$', str(cap)):
+                cap = '00000'
             data = {
                 'store': 'MerSi',
                 'category': 'Supermercato',
-                'location.cap': store_info.get('cap', '00000'),
+                'location.cap': cap,
                 'source': 'mersi'
             }
             response = requests.post(self.upload_url, files=files, data=data, timeout=60)
