@@ -597,6 +597,80 @@ router.get('/preview/:filename', async (req, res) => {
     }
 });
 
+// GET /api/pdfs/download/by-id/:mergeId - Download tramite mergeId
+router.get('/download/by-id/:mergeId', async (req, res) => {
+    try {
+        const { mergeId } = req.params;
+        const configuredDir = process.env.PDF_DIR;
+        const defaultDir = process.env.NODE_ENV === 'production' ? '/tmp/pdfs' : path.join(__dirname, '../../public/pdfs');
+        const pdfDir = configuredDir && configuredDir.trim() !== '' ? configuredDir : defaultDir;
+
+        // Cerca un file che inizi con volantino-mix-<mergeId>-*.pdf
+        const files = await fs.readdir(pdfDir);
+        const filename = files.find(f => f.startsWith(`volantino-mix-${mergeId}-`) && f.endsWith('.pdf'));
+
+        if (!filename) {
+            return res.status(404).json({ success: false, error: 'File non trovato' });
+        }
+
+        const filePath = path.join(pdfDir, filename);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        return res.download(filePath, filename);
+    } catch (error) {
+        // Fallback GridFS
+        try {
+            const { mergeId } = req.params;
+            const bucket = getGridFSBucket();
+            // In GridFS salviamo col filename completo, quindi cerchiamo by regex-like
+            const cursor = bucket.find({ filename: new RegExp(`^volantino-mix-${mergeId}-.*\\.pdf$`) });
+            const file = await cursor.next();
+            if (!file) return res.status(404).json({ success: false, error: 'File non trovato' });
+            res.setHeader('Content-Type', file.contentType || 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename="${file.filename}"`);
+            return bucket.openDownloadStream(file._id).pipe(res);
+        } catch (gerr) {
+            return res.status(404).json({ success: false, error: 'File non trovato' });
+        }
+    }
+});
+
+// GET /api/pdfs/preview/by-id/:mergeId - Preview tramite mergeId
+router.get('/preview/by-id/:mergeId', async (req, res) => {
+    try {
+        const { mergeId } = req.params;
+        const configuredDir = process.env.PDF_DIR;
+        const defaultDir = process.env.NODE_ENV === 'production' ? '/tmp/pdfs' : path.join(__dirname, '../../public/pdfs');
+        const pdfDir = configuredDir && configuredDir.trim() !== '' ? configuredDir : defaultDir;
+
+        const files = await fs.readdir(pdfDir);
+        const filename = files.find(f => f.startsWith(`volantino-mix-${mergeId}-`) && f.endsWith('.pdf'));
+        if (!filename) {
+            // Fallback GridFS
+            try {
+                const bucket = getGridFSBucket();
+                const cursor = bucket.find({ filename: new RegExp(`^volantino-mix-${mergeId}-.*\\.pdf$`) });
+                const file = await cursor.next();
+                if (!file) return res.status(404).json({ success: false, error: 'File non trovato' });
+                res.setHeader('Content-Type', file.contentType || 'application/pdf');
+                res.setHeader('Content-Disposition', 'inline');
+                res.setHeader('Cache-Control', 'public, max-age=3600');
+                return bucket.openDownloadStream(file._id).pipe(res);
+            } catch (gerr) {
+                return res.status(404).json({ success: false, error: 'File non trovato' });
+            }
+        }
+
+        const filePath = path.join(pdfDir, filename);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'inline');
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        return res.sendFile(filePath);
+    } catch (error) {
+        return res.status(500).json({ success: false, error: 'Errore interno del server' });
+    }
+});
+
 // DELETE /api/pdfs/cleanup - Pulizia dei file temporanei (per admin)
 router.delete('/cleanup', async (req, res) => {
     try {

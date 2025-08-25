@@ -326,6 +326,11 @@ class PDFService {
                 tableOfContents,
                 downloadUrl: `/api/pdfs/download/${filename}`,
                 previewUrl: `/api/pdfs/preview/${filename}`,
+                mergeId,
+                byId: {
+                    downloadUrl: `/api/pdfs/download/by-id/${mergeId}`,
+                    previewUrl: `/api/pdfs/preview/by-id/${mergeId}`
+                },
                 createdAt: new Date(),
                 expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 ore
                 metadata: {
