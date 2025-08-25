@@ -12,6 +12,7 @@ const Volantino = require('../models/Volantino');
 const Advertisement = require('../models/Advertisement');
 const crypto = require('crypto');
 const { checkDuplicatesWithAction } = require('../utils/duplicateChecker');
+const { getGridFSBucket } = require('../utils/gridfs');
 
 // Rate limiting per le operazioni PDF
 const pdfRateLimit = rateLimit({
@@ -240,6 +241,18 @@ router.post('/upload', (req, res, next) => {
 
                 uploadedFiles.push(fileInfo);
 
+                // Salva anche su GridFS (persistente su MongoDB)
+                try {
+                    const bucket = getGridFSBucket();
+                    const uploadStream = bucket.openUploadStream(file.filename, {
+                        contentType: 'application/pdf',
+                        metadata: { source: 'upload', originalName: file.originalname }
+                    });
+                    uploadStream.end(fileBuffer);
+                } catch (gerr) {
+                    console.warn('⚠️ GridFS non disponibile o errore upload:', gerr.message);
+                }
+
             } catch (error) {
                 console.error(`Errore nell'elaborazione del file ${file.originalname}:`, error);
                 errors.push({
@@ -464,14 +477,11 @@ router.get('/download/:filename', async (req, res) => {
         const pdfDir = configuredDir && configuredDir.trim() !== '' ? configuredDir : defaultDir;
         const filePath = path.join(pdfDir, filename);
         
+        let existsOnDisk = true;
         try {
             await fs.access(filePath);
         } catch (error) {
-            return res.status(404).json({
-                success: false,
-                error: 'File non trovato',
-                message: 'Il PDF richiesto non esiste o è scaduto'
-            });
+            existsOnDisk = false;
         }
 
         // Imposta gli header per il download
@@ -482,18 +492,32 @@ router.get('/download/:filename', async (req, res) => {
         res.setHeader('Access-Control-Allow-Methods', 'GET');
         res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
         
-        // Usa res.download per forzare il download
-        res.download(filePath, filename, (err) => {
-            if (err) {
-                console.error('Errore durante il download:', err);
-                if (!res.headersSent) {
-                    res.status(500).json({
-                        success: false,
-                        error: 'Errore durante il download del file'
-                    });
+        if (existsOnDisk) {
+            return res.download(filePath, filename, (err) => {
+                if (err && !res.headersSent) {
+                    console.error('Errore durante il download:', err);
+                    res.status(500).json({ success: false, error: 'Errore durante il download del file' });
                 }
-            }
-        });
+            });
+        }
+
+        // Fallback: stream da GridFS
+        try {
+            const bucket = getGridFSBucket();
+            const downloadStream = bucket.openDownloadStreamByName(filename);
+            downloadStream.on('error', () => {
+                if (!res.headersSent) {
+                    res.status(404).json({ success: false, error: 'File non trovato' });
+                }
+            });
+            downloadStream.on('file', (file) => {
+                res.setHeader('Content-Type', file.contentType || 'application/pdf');
+                res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+            });
+            return downloadStream.pipe(res);
+        } catch (gerr) {
+            return res.status(404).json({ success: false, error: 'File non trovato' });
+        }
 
     } catch (error) {
         console.error('Errore nel download del PDF:', error);
@@ -523,14 +547,11 @@ router.get('/preview/:filename', async (req, res) => {
         const pdfDir = configuredDir && configuredDir.trim() !== '' ? configuredDir : defaultDir;
         const filePath = path.join(pdfDir, filename);
         
+        let existsOnDisk = true;
         try {
             await fs.access(filePath);
         } catch (error) {
-            return res.status(404).json({
-                success: false,
-                error: 'File non trovato',
-                message: 'Il PDF richiesto non esiste o è scaduto'
-            });
+            existsOnDisk = false;
         }
 
         // Imposta gli header per la visualizzazione inline
@@ -546,8 +567,25 @@ router.get('/preview/:filename', async (req, res) => {
         res.setHeader('Access-Control-Allow-Methods', 'GET');
         res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
         
-        // Invia il file
-        res.sendFile(filePath);
+        if (existsOnDisk) {
+            return res.sendFile(filePath);
+        }
+
+        // Fallback: stream inline da GridFS
+        try {
+            const bucket = getGridFSBucket();
+            const downloadStream = bucket.openDownloadStreamByName(filename);
+            downloadStream.on('error', () => {
+                if (!res.headersSent) {
+                    res.status(404).json({ success: false, error: 'File non trovato' });
+                }
+            });
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', 'inline');
+            return downloadStream.pipe(res);
+        } catch (gerr) {
+            return res.status(404).json({ success: false, error: 'File non trovato' });
+        }
 
     } catch (error) {
         console.error('Errore nell\'anteprima del PDF:', error);

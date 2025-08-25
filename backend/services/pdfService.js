@@ -4,6 +4,7 @@ const path = require('path');
 const crypto = require('crypto');
 const AdService = require('./adService');
 const Volantino = require('../models/Volantino');
+const { getGridFSBucket } = require('../utils/gridfs');
 
 class PDFService {
     constructor() {
@@ -294,6 +295,18 @@ class PDFService {
             // Salva il PDF
             const pdfBytes = await mergedPDF.save();
             await fs.writeFile(filepath, pdfBytes);
+
+            // Salvataggio anche su GridFS per persistenza su piani free
+            try {
+                const bucket = getGridFSBucket();
+                const uploadStream = bucket.openUploadStream(filename, {
+                    contentType: 'application/pdf',
+                    metadata: { source: 'merged', volantiniIds }
+                });
+                uploadStream.end(Buffer.from(pdfBytes));
+            } catch (gerr) {
+                console.warn('⚠️ GridFS non disponibile o errore upload merged:', gerr.message);
+            }
 
             // Calcola statistiche
             const fileSize = pdfBytes.length;
