@@ -681,8 +681,9 @@ class VolantinoMix {
                 try {
                     const flipbookContainer = document.getElementById('embedded-flipbook');
                     if (flipbookContainer) {
-                        const viewerUrl = `/flipbook-viewer.html?pdf=${encodeURIComponent(result.url)}&title=${encodeURIComponent(result.filename)}`;
-                        flipbookContainer.innerHTML = `<iframe src="${viewerUrl}" style="width:100%;height:80vh;border:0;" loading="lazy"></iframe>`;
+                        // Usa preview by-id se disponibile, altrimenti URL di download diretto
+                        const inlineUrl = (result.byId && result.byId.previewUrl) ? result.byId.previewUrl : (result.previewUrl || result.url);
+                        flipbookContainer.innerHTML = `<iframe src="${inlineUrl}" style="width:100%;height:80vh;border:0;" loading="lazy"></iframe>`;
                     }
                 } catch (e) {
                     // Fallback alla vecchia modalità in caso di errore
