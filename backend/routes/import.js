@@ -75,6 +75,21 @@ router.post('/all', [
                 name: 'Mersi Scraper',
                 description: 'Scraping volantini Mersi'
             },
+            eurospin_site: {
+                script: 'scraper_eurospin_site.py',
+                name: 'Eurospin Site Scraper',
+                description: 'Scraping PDF dal sito Eurospin'
+            },
+            lidl_site: {
+                script: 'scraper_lidl_site.py',
+                name: 'Lidl Site Scraper',
+                description: 'Scraping PDF dal sito Lidl'
+            },
+            md_site: {
+                script: 'scraper_md_site.py',
+                name: 'MD Site Scraper',
+                description: 'Scraping PDF dal sito MD'
+            },
             integrazione: {
                 script: 'integrazione_volantini.py',
                 name: 'Integrazione Volantini',
