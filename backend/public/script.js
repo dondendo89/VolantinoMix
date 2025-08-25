@@ -625,23 +625,14 @@ class VolantinoMix {
                             <p><strong>Pagine totali:</strong> ${result.totalPages}</p>
                         </div>
                         
-                        <!-- Flipbook Viewer Incorporato -->
-                        <div class="embedded-flipbook">
-                            <div class="flipbook-header">
-                                <h3>📖 Visualizzazione Flipbook</h3>
+                        <!-- Visualizzazione PDF con AdSense -->
+                        <div class="pdf-inline-view">
+                            <div class="ad-banner" style="margin:16px 0;">
+                                <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXX" data-ad-slot="XXXXXXXXXX" data-ad-format="auto" data-full-width-responsive="true"></ins>
                             </div>
-                            <div class="flipbook-container">
-                                <div id="embedded-flipbook" class="flipbook-page">
-                                    <div class="flipbook-loading">
-                                        <div class="spinner"></div>
-                                        <p>Caricamento flipbook in corso...</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flipbook-controls">
-                                <button id="prev-page" class="flipbook-btn" disabled>⬅️ Precedente</button>
-                                <span id="page-info" class="page-info">Pagina 1 di ${result.totalPages}</span>
-                                <button id="next-page" class="flipbook-btn">Successiva ➡️</button>
+                            <div id="pdf-embed-container"></div>
+                            <div class="ad-banner" style="margin:16px 0;">
+                                <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXX" data-ad-slot="XXXXXXXXXX" data-ad-format="auto" data-full-width-responsive="true"></ins>
                             </div>
                         </div>
                         
@@ -677,28 +668,27 @@ class VolantinoMix {
                 `;
                 resultDiv.style.display = 'block';
                 
-                // Integrazione flipbook via iframe (più performante)
+                // Visualizzazione PDF nativa + AdSense
                 try {
-                    const flipbookContainer = document.getElementById('embedded-flipbook');
-                    this.log('🔎 DEBUG flipbook embed (backend/public): container?', !!flipbookContainer);
-                    if (flipbookContainer) {
+                    const pdfContainer = document.getElementById('pdf-embed-container');
+                    this.log('🔎 DEBUG pdf embed (backend/public): container?', !!pdfContainer);
+                    if (pdfContainer) {
                         // Usa viewer nativo: object con fallback a iframe e link diretto
                         const guessedPreview = result.filename ? `/api/pdfs/preview/${result.filename}` : null;
                         const inlineUrl = (result.byId && result.byId.previewUrl) || result.previewUrl || guessedPreview || result.url || result.downloadUrl;
-                        this.log('🔎 DEBUG flipbook inlineUrl (backend/public):', inlineUrl);
-                        flipbookContainer.innerHTML = `
+                        this.log('🔎 DEBUG pdf inlineUrl (backend/public):', inlineUrl);
+                        pdfContainer.innerHTML = `
                             <object data="${inlineUrl}#view=FitH" type="application/pdf" style="width:100%;height:80vh;">
                                 <iframe src="${inlineUrl}#view=FitH" style="width:100%;height:80vh;border:0;" loading="lazy"></iframe>
                                 <div style="padding:16px;text-align:center">
                                     Impossibile visualizzare il PDF incorporato. <a href="${inlineUrl}" target="_blank" rel="noopener">Apri il PDF</a>
                                 </div>
                             </object>`;
+                        try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
+                        try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
                     }
                 } catch (e) {
-                    // Fallback alla vecchia modalità in caso di errore
-                    setTimeout(() => {
-                        this.initEmbeddedFlipbook(result.url, result.filename);
-                    }, 500);
+                    this.error('Errore embed PDF inline:', e);
                 }
                 
                 // Mostra notifica di successo

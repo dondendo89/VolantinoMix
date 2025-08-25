@@ -682,17 +682,29 @@ class VolantinoMix {
                     const flipbookContainer = document.getElementById('embedded-flipbook');
                     this.log('🔎 DEBUG flipbook embed (frontend): container?', !!flipbookContainer);
                     if (flipbookContainer) {
-                        // Costruisci URL preview affidabile anche se il backend non lo fornisce
+                        // Rimuovi flipbook: embeddiamo PDF + AdSense sopra e sotto
                         const guessedPreview = result.filename ? `/api/pdfs/preview/${result.filename}` : null;
                         const inlineUrl = (result.byId && result.byId.previewUrl) || result.previewUrl || guessedPreview || result.url || result.downloadUrl;
                         this.log('🔎 DEBUG flipbook inlineUrl (frontend):', inlineUrl);
-                        flipbookContainer.innerHTML = `
-                            <object data="${inlineUrl}#view=FitH" type="application/pdf" style="width:100%;height:80vh;">
-                                <iframe src="${inlineUrl}#view=FitH" style="width:100%;height:80vh;border:0;" loading="lazy"></iframe>
-                                <div style="padding:16px;text-align:center">
-                                    Impossibile visualizzare il PDF incorporato. <a href="${inlineUrl}" target="_blank" rel="noopener">Apri il PDF</a>
+                        flipbookContainer.outerHTML = `
+                            <div class="pdf-inline-view">
+                                <div class="ad-banner" style="margin:16px 0;">
+                                    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXX" data-ad-slot="XXXXXXXXXX" data-ad-format="auto" data-full-width-responsive="true"></ins>
                                 </div>
-                            </object>`;
+                                <div id="pdf-embed-container">
+                                    <object data="${inlineUrl}#view=FitH" type="application/pdf" style="width:100%;height:80vh;">
+                                        <iframe src="${inlineUrl}#view=FitH" style="width:100%;height:80vh;border:0;" loading="lazy"></iframe>
+                                        <div style="padding:16px;text-align:center">
+                                            Impossibile visualizzare il PDF incorporato. <a href="${inlineUrl}" target="_blank" rel="noopener">Apri il PDF</a>
+                                        </div>
+                                    </object>
+                                </div>
+                                <div class="ad-banner" style="margin:16px 0;">
+                                    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXX" data-ad-slot="XXXXXXXXXX" data-ad-format="auto" data-full-width-responsive="true"></ins>
+                                </div>
+                            </div>`;
+                        try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
+                        try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
                     }
                 } catch (e) {
                     setTimeout(() => {
