@@ -159,14 +159,8 @@ router.post('/all', [
                     }
                 });
 
-                // Se non trova statistiche specifiche, cerca numeri nell'output
-                if (stats.processed === 0 && stats.created === 0) {
-                    const numbers = output.match(/\d+/g);
-                    if (numbers && numbers.length >= 2) {
-                        stats.processed = parseInt(numbers[0]) || 0;
-                        stats.created = parseInt(numbers[1]) || 0;
-                    }
-                }
+                // Evita fallback su numeri arbitrari nell'output (es. anni/versioni)
+                // Se i pattern non coincidono, lascia i valori a 0 e delega il conteggio al chiamante
             } catch (error) {
                 console.warn(`⚠️ Impossibile estrarre statistiche per ${sourceName}:`, error.message);
             }
