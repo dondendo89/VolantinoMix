@@ -271,13 +271,13 @@
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXX" crossorigin="anonymous"></script>
     
     <!-- PDF.js Library with fallback -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" onerror="loadFallbackScript('/public/libs/pdf.min.js', 'PDF.js')"></script>
+    <script src="/public/libs/pdf.min.js"></script>
     
     <!-- jQuery Library with fallback -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" onerror="loadFallbackScript('/public/libs/jquery.min.js', 'jQuery')"></script>
+    <script src="/public/libs/jquery.min.js"></script>
     
     <!-- Turn.js Library with fallback -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/3/turn.min.js" onerror="loadFallbackScript('/public/libs/turn.min.js', 'Turn.js')"></script>
+    <script src="/public/libs/turn.min.js"></script>
     
     <script src="/public/config.js" onerror="handleLibraryError('Config.js')"></script>
     <script>
@@ -437,8 +437,11 @@
             const flipbook = document.getElementById('flipbook');
             
             try {
-                // Configure PDF.js worker
-                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                // Configura PDF.js: disabilita il worker per evitare blocchi CSP/CDN
+                try {
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                } catch (e) {}
+                try { pdfjsLib.disableWorker = true; } catch (e) {}
                 
                 // Load PDF document
                 const loadingTask = pdfjsLib.getDocument({
