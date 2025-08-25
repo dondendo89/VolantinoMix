@@ -9,7 +9,9 @@ class PDFService {
     constructor() {
         // Su Render, usa /tmp per i file temporanei
         this.tempDir = process.env.NODE_ENV === 'production' ? '/tmp' : path.join(__dirname, '../../temp');
-        this.outputDir = process.env.NODE_ENV === 'production' ? '/tmp/pdfs' : path.join(__dirname, '../../public/pdfs');
+        const configuredDir = process.env.PDF_DIR;
+        const defaultOutput = process.env.NODE_ENV === 'production' ? '/tmp/pdfs' : path.join(__dirname, '../../public/pdfs');
+        this.outputDir = configuredDir && configuredDir.trim() !== '' ? configuredDir : defaultOutput;
         this.maxFileSize = 50 * 1024 * 1024; // 50MB
         this.allowedMimeTypes = ['application/pdf'];
         

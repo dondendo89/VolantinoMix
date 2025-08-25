@@ -94,8 +94,10 @@ const handleMulterError = (err, req, res, next) => {
 // Configurazione multer per l'upload dei file
 const storage = multer.diskStorage({
     destination: async (req, file, cb) => {
-        // Usa la stessa directory sia per upload che per download
-        const uploadDir = process.env.NODE_ENV === 'production' ? '/tmp/pdfs' : path.join(__dirname, '../../public/pdfs');
+        // Usa directory configurabile per upload e download dei PDF
+        const configuredDir = process.env.PDF_DIR;
+        const defaultDir = process.env.NODE_ENV === 'production' ? '/tmp/pdfs' : path.join(__dirname, '../../public/pdfs');
+        const uploadDir = configuredDir && configuredDir.trim() !== '' ? configuredDir : defaultDir;
         try {
             await fs.mkdir(uploadDir, { recursive: true });
             cb(null, uploadDir);
@@ -456,8 +458,10 @@ router.get('/download/:filename', async (req, res) => {
             });
         }
 
-        // Usa il percorso corretto in base all'ambiente
-        const pdfDir = process.env.NODE_ENV === 'production' ? '/tmp/pdfs' : path.join(__dirname, '../../public/pdfs');
+        // Usa directory configurabile per i PDF
+        const configuredDir = process.env.PDF_DIR;
+        const defaultDir = process.env.NODE_ENV === 'production' ? '/tmp/pdfs' : path.join(__dirname, '../../public/pdfs');
+        const pdfDir = configuredDir && configuredDir.trim() !== '' ? configuredDir : defaultDir;
         const filePath = path.join(pdfDir, filename);
         
         try {
@@ -514,7 +518,10 @@ router.get('/preview/:filename', async (req, res) => {
             });
         }
 
-        const filePath = path.join(__dirname, '../../public/pdfs', filename);
+        const configuredDir = process.env.PDF_DIR;
+        const defaultDir = process.env.NODE_ENV === 'production' ? '/tmp/pdfs' : path.join(__dirname, '../../public/pdfs');
+        const pdfDir = configuredDir && configuredDir.trim() !== '' ? configuredDir : defaultDir;
+        const filePath = path.join(pdfDir, filename);
         
         try {
             await fs.access(filePath);
