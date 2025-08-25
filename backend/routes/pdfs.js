@@ -94,7 +94,8 @@ const handleMulterError = (err, req, res, next) => {
 // Configurazione multer per l'upload dei file
 const storage = multer.diskStorage({
     destination: async (req, file, cb) => {
-        const uploadDir = path.join(__dirname, '../../public/pdfs');
+        // Usa la stessa directory sia per upload che per download
+        const uploadDir = process.env.NODE_ENV === 'production' ? '/tmp/pdfs' : path.join(__dirname, '../../public/pdfs');
         try {
             await fs.mkdir(uploadDir, { recursive: true });
             cb(null, uploadDir);
