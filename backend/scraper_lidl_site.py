@@ -39,6 +39,12 @@ class LidlSiteScraper:
             src = iframe["src"].strip()
             if src.lower().endswith(".pdf"):
                 links.add(src if src.startswith("http") else urljoin(base, src))
+        # Fallback: cerca stringhe .pdf in tutto l'HTML
+        text = soup.get_text("\n", strip=True) + "\n" + str(soup)
+        for token in text.split():
+            if token.lower().endswith('.pdf') and ('http' in token or token.startswith('/')):
+                full = token if token.startswith('http') else urljoin(base, token)
+                links.add(full)
         return list(links)
 
     def download_pdf(self, url: str) -> str | None:
@@ -78,9 +84,27 @@ class LidlSiteScraper:
 
     def run(self):
         try:
+            # 1) pagina principale
             r = self.session.get(self.start_url, timeout=20)
             r.raise_for_status()
-            pdfs = self.find_pdf_links(r.content, self.start_url)
+            pdfs = set(self.find_pdf_links(r.content, self.start_url))
+            # 2) segui link che contengono 'volantin' fino a profondità 1
+            soup = BeautifulSoup(r.content, 'html.parser')
+            candidates = []
+            for a in soup.find_all('a', href=True):
+                href = a['href']
+                if any(k in href.lower() for k in ['volantino', 'flyer', 'offerte']):
+                    candidates.append(href if href.startswith('http') else urljoin(self.start_url, href))
+            for url in candidates[:6]:
+                try:
+                    rr = self.session.get(url, timeout=20)
+                    if rr.ok:
+                        found = self.find_pdf_links(rr.content, url)
+                        pdfs.update(found)
+                        time.sleep(1)
+                except Exception:
+                    pass
+            pdfs = list(pdfs)
             print(f"[LidlSite] PDF trovati: {len(pdfs)}")
             created = 0
             for url in pdfs:

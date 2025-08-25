@@ -39,6 +39,12 @@ class MDSiteScraper:
             src = iframe["src"].strip()
             if src.lower().endswith(".pdf"):
                 links.add(src if src.startswith("http") else urljoin(base, src))
+        # Fallback generico
+        text = soup.get_text("\n", strip=True) + "\n" + str(soup)
+        for token in text.split():
+            if token.lower().endswith('.pdf') and ('http' in token or token.startswith('/')):
+                full = token if token.startswith('http') else urljoin(base, token)
+                links.add(full)
         return list(links)
 
     def download_pdf(self, url: str) -> str | None:
@@ -80,7 +86,19 @@ class MDSiteScraper:
         try:
             r = self.session.get(self.start_url, timeout=20)
             r.raise_for_status()
-            pdfs = self.find_pdf_links(r.content, self.start_url)
+            pdfs = set(self.find_pdf_links(r.content, self.start_url))
+            soup = BeautifulSoup(r.content, 'html.parser')
+            for a in soup.find_all('a', href=True):
+                href = a['href']
+                if any(k in href.lower() for k in ['volantino', 'offerte', 'promo']):
+                    try:
+                        rr = self.session.get(href if href.startswith('http') else urljoin(self.start_url, href), timeout=20)
+                        if rr.ok:
+                            pdfs.update(self.find_pdf_links(rr.content, self.start_url))
+                            time.sleep(1)
+                    except Exception:
+                        pass
+            pdfs = list(pdfs)
             print(f"[MDSite] PDF trovati: {len(pdfs)}")
             created = 0
             for url in pdfs:
