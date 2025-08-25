@@ -99,9 +99,17 @@ class MersiVolantiniScraper:
     def upload_pdf(self, filename):
         store_info = self.extract_store_info(filename)
         with open(filename, 'rb') as f:
-            files = {'pdfs': f}  # Corretto da 'pdf' a 'pdfs' per compatibilità con Multer
-            data = {'source': 'mersi', 'storeType': store_info['store_type'], 'cap': store_info['cap']}
-            response = requests.post(self.upload_url, files=files, data=data)
+            # Invia il file con nome e content-type corretto per Multer (application/pdf)
+            files = {
+                'pdfs': (os.path.basename(filename), f, 'application/pdf')
+            }
+            data = {
+                'store': 'MerSi',
+                'category': 'Supermercato',
+                'location.cap': store_info.get('cap', '00000'),
+                'source': 'mersi'
+            }
+            response = requests.post(self.upload_url, files=files, data=data, timeout=60)
             return response.json() if response.ok else None
 
     def run(self):
