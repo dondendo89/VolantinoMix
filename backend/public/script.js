@@ -1048,14 +1048,17 @@ class VolantinoMix {
             }
 
             const script = document.createElement('script');
-            script.src = '/public/libs/pdf.min.js';
+            script.src = '/public/libs/pdf.min.js?v=1';
             script.onload = () => {
                 try {
                     pdfjsLib.disableWorker = true;
                 } catch (e) {}
                 resolve();
             };
-            script.onerror = reject;
+            script.onerror = (e) => {
+                console.error('Errore caricamento PDF.js', script.src, e);
+                reject(e);
+            };
             document.head.appendChild(script);
         });
     }
