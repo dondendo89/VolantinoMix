@@ -1052,6 +1052,8 @@ class VolantinoMix {
             script.onload = () => {
                 try {
                     pdfjsLib.disableWorker = true;
+                    // Imposta un workerSrc locale per evitare tentativi verso CDN
+                    try { pdfjsLib.GlobalWorkerOptions.workerSrc = '/public/libs/pdf.min.js?v=1'; } catch (e) {}
                 } catch (e) {}
                 resolve();
             };

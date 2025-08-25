@@ -1055,7 +1055,10 @@ class VolantinoMix {
             const script = document.createElement('script');
             script.src = '/public/libs/pdf.min.js?v=1';
             script.onload = () => {
-                try { pdfjsLib.disableWorker = true; } catch (e) {}
+                try {
+                    pdfjsLib.disableWorker = true;
+                    try { pdfjsLib.GlobalWorkerOptions.workerSrc = '/public/libs/pdf.min.js?v=1'; } catch (e) {}
+                } catch (e) {}
                 resolve();
             };
             script.onerror = (e) => {
