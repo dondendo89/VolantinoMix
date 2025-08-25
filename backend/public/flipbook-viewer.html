@@ -388,7 +388,24 @@
                     store: 'PDF Generato'
                 };
                 
-                await convertPDFToImages(pdfUrl);
+                try {
+                    await convertPDFToImages(pdfUrl);
+                } catch (primaryErr) {
+                    console.warn('Prima apertura fallita, tentativo fallback:', primaryErr);
+                    // Fallback 1: usa URL di download invece della preview
+                    if (pdfUrl.includes('/api/pdfs/preview/')) {
+                        const altUrl = pdfUrl.replace('/api/pdfs/preview/', '/api/pdfs/download/');
+                        try {
+                            await convertPDFToImages(altUrl);
+                            return;
+                        } catch (altErr) {
+                            console.error('Fallback download fallito:', altErr);
+                            throw altErr;
+                        }
+                    } else {
+                        throw primaryErr;
+                    }
+                }
                 
             } catch (err) {
                 loading.style.display = 'none';
@@ -424,7 +441,12 @@
                 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
                 
                 // Load PDF document
-                const loadingTask = pdfjsLib.getDocument(pdfUrl);
+                const loadingTask = pdfjsLib.getDocument({
+                    url: pdfUrl,
+                    withCredentials: false,
+                    disableRange: true,
+                    disableStream: true
+                });
                 const pdf = await loadingTask.promise;
                 
                 pageCount = pdf.numPages;
