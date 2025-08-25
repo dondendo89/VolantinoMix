@@ -326,6 +326,15 @@
                         </div>
                         <div class="source-item">
                             <div class="source-info">
+                                <div class="source-icon eurospin"></div>
+                                <label>
+                                    <input type="checkbox" id="source-eurospin-site" checked>
+                                    Eurospin (Sito Ufficiale)
+                                </label>
+                            </div>
+                        </div>
+                        <div class="source-item">
+                            <div class="source-info">
                                 <div class="source-icon ipercoop"></div>
                                 <label>
                                     <input type="checkbox" id="source-ipercoop" checked>
@@ -339,6 +348,24 @@
                                 <label>
                                     <input type="checkbox" id="source-integrazione" checked>
                                     Integrazione Locale
+                                </label>
+                            </div>
+                        </div>
+                        <div class="source-item">
+                            <div class="source-info">
+                                <div class="source-icon deco"></div>
+                                <label>
+                                    <input type="checkbox" id="source-lidl-site" checked>
+                                    Lidl (Sito Ufficiale)
+                                </label>
+                            </div>
+                        </div>
+                        <div class="source-item">
+                            <div class="source-info">
+                                <div class="source-icon deco"></div>
+                                <label>
+                                    <input type="checkbox" id="source-md-site" checked>
+                                    MD (Sito Ufficiale)
                                 </label>
                             </div>
                         </div>
@@ -414,8 +441,11 @@
             const sources = [];
             if (document.getElementById('source-deco').checked) sources.push('deco');
             if (document.getElementById('source-eurospin').checked) sources.push('eurospin');
+            if (document.getElementById('source-eurospin-site')?.checked) sources.push('eurospin_site');
             if (document.getElementById('source-ipercoop').checked) sources.push('ipercoop');
             if (document.getElementById('source-integrazione').checked) sources.push('integrazione');
+            if (document.getElementById('source-lidl-site')?.checked) sources.push('lidl_site');
+            if (document.getElementById('source-md-site')?.checked) sources.push('md_site');
             if (document.getElementById('source-mersi').checked) sources.push('mersi');
             return sources;
         }
