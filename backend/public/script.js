@@ -999,7 +999,7 @@ class VolantinoMix {
 
             // Carica PDF.js se non già caricato
             if (typeof pdfjsLib === 'undefined') {
-                await this.loadPDFJS();
+                await this.loadPDFJSLite();
             }
 
             // Carica il PDF
@@ -1040,7 +1040,7 @@ class VolantinoMix {
         }
     }
 
-    async loadPDFJS() {
+    async loadPDFJSLite() {
         return new Promise((resolve, reject) => {
             if (typeof pdfjsLib !== 'undefined') {
                 resolve();
@@ -1048,9 +1048,11 @@ class VolantinoMix {
             }
 
             const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+            script.src = '/public/libs/pdf.min.js';
             script.onload = () => {
-                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                try {
+                    pdfjsLib.disableWorker = true;
+                } catch (e) {}
                 resolve();
             };
             script.onerror = reject;
