@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Viewer Paginato - VolantinoMix</title>
+    <style>
+        body{margin:0;font-family:system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial}
+        .topbar{display:flex;align-items:center;gap:8px;justify-content:center;padding:10px;background:#0d47a1;color:#fff}
+        .btn{background:#1976d2;color:#fff;border:0;border-radius:6px;padding:8px 12px;cursor:pointer}
+        .btn:disabled{opacity:.5;cursor:not-allowed}
+        .page-wrap{display:flex;justify-content:center;align-items:center;min-height:70vh;background:#f5f7fb}
+        #canvas{background:#fff;box-shadow:0 6px 24px rgba(0,0,0,.15)}
+        .ad-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:9999}
+        .ad-card{background:#fff;width:min(96vw,560px);border-radius:12px;padding:16px;box-shadow:0 12px 40px rgba(0,0,0,.3)}
+        .ad-actions{display:flex;justify-content:flex-end;margin-top:8px}
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <button id="prev" class="btn" disabled>⬅️ Pagina precedente</button>
+        <div id="info">Pagina 1 / 1</div>
+        <button id="next" class="btn" disabled>Pagina successiva ➡️</button>
+        <button id="zoomOut" class="btn">−</button>
+        <div id="zoom">100%</div>
+        <button id="zoomIn" class="btn">+</button>
+    </div>
+
+    <div class="page-wrap">
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <div class="ad-overlay" id="adOverlay">
+        <div class="ad-card">
+            <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXX" data-ad-slot="XXXXXXXXXX" data-ad-format="auto" data-full-width-responsive="true"></ins>
+            <div class="ad-actions">
+                <button id="continue" class="btn">Continua</button>
+            </div>
+        </div>
+    </div>
+
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXX" crossorigin="anonymous"></script>
+    <script src="/public/libs/pdf.min.js"></script>
+    <script>
+    (function(){
+        const params = new URLSearchParams(location.search);
+        const pdfUrl = params.get('pdf');
+        const title = params.get('title') || 'PDF';
+        document.title = 'Viewer Paginato - ' + title;
+
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const prevBtn = document.getElementById('prev');
+        const nextBtn = document.getElementById('next');
+        const zoomInBtn = document.getElementById('zoomIn');
+        const zoomOutBtn = document.getElementById('zoomOut');
+        const zoomLbl = document.getElementById('zoom');
+        const info = document.getElementById('info');
+        const adOverlay = document.getElementById('adOverlay');
+        const continueBtn = document.getElementById('continue');
+
+        if (!pdfUrl) {
+            alert('Nessun PDF specificato');
+            return;
+        }
+
+        try { pdfjsLib.disableWorker = true; } catch(e) {}
+
+        let pdfDoc = null;
+        let currentPage = 1;
+        let scale = 1.2;
+
+        function updateControls(){
+            if (!pdfDoc) return;
+            info.textContent = `Pagina ${currentPage} / ${pdfDoc.numPages}`;
+            zoomLbl.textContent = Math.round(scale*100)+'%';
+            prevBtn.disabled = currentPage <= 1;
+            nextBtn.disabled = currentPage >= pdfDoc.numPages;
+        }
+
+        async function renderPage(num){
+            const page = await pdfDoc.getPage(num);
+            const viewport = page.getViewport({ scale });
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            await page.render({ canvasContext: ctx, viewport }).promise;
+            updateControls();
+            // Ad ogni 3 pagine (escludi la prima), mostra overlay AdSense
+            if (num % 3 === 0 && num > 1) {
+                try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
+                adOverlay.style.display = 'flex';
+            }
+        }
+
+        continueBtn.onclick = () => {
+            adOverlay.style.display = 'none';
+        };
+
+        prevBtn.onclick = () => { if (currentPage>1){ currentPage--; renderPage(currentPage); } };
+        nextBtn.onclick = () => { if (currentPage<pdfDoc.numPages){ currentPage++; renderPage(currentPage); } };
+        zoomInBtn.onclick = () => { scale = Math.min(scale+0.2, 2.5); renderPage(currentPage); };
+        zoomOutBtn.onclick = () => { scale = Math.max(scale-0.2, 0.5); renderPage(currentPage); };
+
+        (async function init(){
+            const loadingTask = pdfjsLib.getDocument({ url: pdfUrl, disableRange:true, disableStream:true });
+            pdfDoc = await loadingTask.promise;
+            updateControls();
+            renderPage(currentPage);
+        })();
+    })();
+    </script>
+</body>
+</html>
+
+

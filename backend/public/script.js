@@ -673,17 +673,8 @@ class VolantinoMix {
                     const pdfContainer = document.getElementById('pdf-embed-container');
                     this.log('🔎 DEBUG pdf embed (backend/public): container?', !!pdfContainer);
                     if (pdfContainer) {
-                        // Usa viewer nativo: object con fallback a iframe e link diretto
-                        const guessedPreview = result.filename ? `/api/pdfs/preview/${result.filename}` : null;
-                        const inlineUrl = (result.byId && result.byId.previewUrl) || result.previewUrl || guessedPreview || result.url || result.downloadUrl;
-                        this.log('🔎 DEBUG pdf inlineUrl (backend/public):', inlineUrl);
-                        pdfContainer.innerHTML = `
-                            <object data="${inlineUrl}#view=FitH" type="application/pdf" style="width:100%;height:80vh;">
-                                <iframe src="${inlineUrl}#view=FitH" style="width:100%;height:80vh;border:0;" loading="lazy"></iframe>
-                                <div style="padding:16px;text-align:center">
-                                    Impossibile visualizzare il PDF incorporato. <a href="${inlineUrl}" target="_blank" rel="noopener">Apri il PDF</a>
-                                </div>
-                            </object>`;
+                        const viewerUrl = `/paginated-viewer.html?pdf=${encodeURIComponent((result.byId && result.byId.previewUrl) || result.previewUrl || (result.filename?('/api/pdfs/preview/'+result.filename):result.url)|| result.downloadUrl)}&title=${encodeURIComponent(result.filename)}`;
+                        pdfContainer.innerHTML = `<iframe src="${viewerUrl}" style="width:100%;height:85vh;border:0;" loading="lazy"></iframe>`;
                         try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
                         try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
                     }

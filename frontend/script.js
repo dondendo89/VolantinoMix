@@ -686,18 +686,14 @@ class VolantinoMix {
                         const guessedPreview = result.filename ? `/api/pdfs/preview/${result.filename}` : null;
                         const inlineUrl = (result.byId && result.byId.previewUrl) || result.previewUrl || guessedPreview || result.url || result.downloadUrl;
                         this.log('🔎 DEBUG flipbook inlineUrl (frontend):', inlineUrl);
+                        const viewerUrl = `/paginated-viewer.html?pdf=${encodeURIComponent(inlineUrl)}&title=${encodeURIComponent(result.filename)}`;
                         flipbookContainer.outerHTML = `
                             <div class="pdf-inline-view">
                                 <div class="ad-banner" style="margin:16px 0;">
                                     <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXX" data-ad-slot="XXXXXXXXXX" data-ad-format="auto" data-full-width-responsive="true"></ins>
                                 </div>
                                 <div id="pdf-embed-container">
-                                    <object data="${inlineUrl}#view=FitH" type="application/pdf" style="width:100%;height:80vh;">
-                                        <iframe src="${inlineUrl}#view=FitH" style="width:100%;height:80vh;border:0;" loading="lazy"></iframe>
-                                        <div style="padding:16px;text-align:center">
-                                            Impossibile visualizzare il PDF incorporato. <a href="${inlineUrl}" target="_blank" rel="noopener">Apri il PDF</a>
-                                        </div>
-                                    </object>
+                                    <iframe src="${viewerUrl}" style="width:100%;height:85vh;border:0;" loading="lazy"></iframe>
                                 </div>
                                 <div class="ad-banner" style="margin:16px 0;">
                                     <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXX" data-ad-slot="XXXXXXXXXX" data-ad-format="auto" data-full-width-responsive="true"></ins>
