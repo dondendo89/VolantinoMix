@@ -681,9 +681,14 @@ class VolantinoMix {
                 try {
                     const flipbookContainer = document.getElementById('embedded-flipbook');
                     if (flipbookContainer) {
-                        // Usa preview by-id se disponibile, altrimenti URL di download diretto
-                        const inlineUrl = (result.byId && result.byId.previewUrl) ? result.byId.previewUrl : (result.previewUrl || result.url);
-                        flipbookContainer.innerHTML = `<iframe src="${inlineUrl}" style="width:100%;height:80vh;border:0;" loading="lazy"></iframe>`;
+                        const inlineUrl = (result.byId && result.byId.previewUrl) ? result.byId.previewUrl : (result.previewUrl || result.url || result.downloadUrl);
+                        flipbookContainer.innerHTML = `
+                            <object data="${inlineUrl}#view=FitH" type="application/pdf" style="width:100%;height:80vh;">
+                                <iframe src="${inlineUrl}#view=FitH" style="width:100%;height:80vh;border:0;" loading="lazy"></iframe>
+                                <div style="padding:16px;text-align:center">
+                                    Impossibile visualizzare il PDF incorporato. <a href="${inlineUrl}" target="_blank" rel="noopener">Apri il PDF</a>
+                                </div>
+                            </object>`;
                     }
                 } catch (e) {
                     setTimeout(() => {
