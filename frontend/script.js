@@ -680,8 +680,10 @@ class VolantinoMix {
                 // Integrazione flipbook via iframe (viewer dedicato)
                 try {
                     const flipbookContainer = document.getElementById('embedded-flipbook');
+                    this.log('🔎 DEBUG flipbook embed (frontend): container?', !!flipbookContainer);
                     if (flipbookContainer) {
                         const inlineUrl = (result.byId && result.byId.previewUrl) ? result.byId.previewUrl : (result.previewUrl || result.url || result.downloadUrl);
+                        this.log('🔎 DEBUG flipbook inlineUrl (frontend):', inlineUrl);
                         flipbookContainer.innerHTML = `
                             <object data="${inlineUrl}#view=FitH" type="application/pdf" style="width:100%;height:80vh;">
                                 <iframe src="${inlineUrl}#view=FitH" style="width:100%;height:80vh;border:0;" loading="lazy"></iframe>
