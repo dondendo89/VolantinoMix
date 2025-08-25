@@ -115,7 +115,8 @@ const corsOptions = {
             'https://www.volantinomix.com',
             'https://volantinomix.vercel.app',
             'https://volantino-mix.vercel.app',
-            'https://volantinomix.onrender.com'
+            'https://volantinomix.onrender.com',
+            'https://volantinomix-frontend.onrender.com'
         ];
         
         // Allow requests with no origin (mobile apps, etc.)

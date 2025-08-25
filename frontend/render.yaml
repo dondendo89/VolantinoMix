@@ -1,0 +1,21 @@
+services:
+  - type: static_site
+    name: volantinomix-frontend
+    buildCommand: ""
+    staticPublishPath: .
+    envVars:
+      - key: NODE_ENV
+        value: production
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=86400
+      - path: /sw.js
+        name: Cache-Control
+        value: no-cache
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    autoDeploy: true
+    rootDir: frontend

@@ -12,8 +12,8 @@ const CONFIG = {
             return process.env.BACKEND_URL;
         }
         
-        // Production fallback - Railway backend URL
-        return 'https://volantinomix-production-d308.up.railway.app';
+        // Production fallback - Render backend URL
+        return 'https://volantinomix.onrender.com';
     },
     
     // API endpoints
